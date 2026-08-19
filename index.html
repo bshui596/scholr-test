@@ -1,6 +1,20 @@
 <!DOCTYPE html>
 <html lang="en" data-t="forest" data-f="outfit">
 <head>
+
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']]
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Scholr — St. Robert CHS — GreenDigital Technologies Inc.</title>
@@ -8337,17 +8351,51 @@ function aiChatToggle(){
   }
 }
 
-function aiChatAppendMsg(text, who){
+function aiChatAppendMsg(text, who) {
   const wrap = g('ai-chat-msgs');
-  if (!wrap) return;
+  if (!wrap) return null;
+
   const div = document.createElement('div');
   div.className = 'ai-msg ' + (who === 'user' ? 'ai-msg-user' : 'ai-msg-bot');
-  div.textContent = text; // textContent, not innerHTML — avoids any HTML/script injection
+
+  if (who === 'user') {
+    div.textContent = text;
+  } else {
+    renderAIMessage(div, text);
+  }
+
   wrap.appendChild(div);
   wrap.scrollTop = wrap.scrollHeight;
+
+  return div;
 }
 
-async function aiChatSend(e){
+function renderAIMessage(el, text) {
+  // Escape HTML first so AI output cannot inject HTML/scripts.
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Basic Markdown formatting
+  const html = escaped
+    .replace(/\*\*(.+?)\*\*/gs, '<strong>$1</strong>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\n/g, '<br>');
+
+  el.innerHTML = html;
+
+  // Render LaTeX
+  if (window.MathJax && MathJax.typesetPromise) {
+    MathJax.typesetClear([el]);
+
+    MathJax.typesetPromise([el]).catch(err => {
+      console.error('MathJax rendering error:', err);
+    });
+  }
+}
+
+async function aiChatSend(e) {
   if (e) e.preventDefault();
   if (aiChatBusy) return false;
 
@@ -8360,6 +8408,7 @@ async function aiChatSend(e){
   inp.value = '';
 
   aiChatAppendMsg(text, 'user');
+
   aiChatHistory.push({
     role: 'user',
     content: text
@@ -8391,9 +8440,7 @@ async function aiChatSend(e){
 
       try {
         const data = await res.json();
-        if (data.error) {
-          errorMessage = data.error;
-        }
+        if (data.error) errorMessage = data.error;
       } catch (_) {}
 
       throw new Error(errorMessage);
@@ -8403,43 +8450,32 @@ async function aiChatSend(e){
       throw new Error('Streaming is not supported by this browser.');
     }
 
-    // Hide "thinking..." as soon as the first response starts
-    if (typingEl) {
-      typingEl.style.display = 'none';
-    }
-
-    // Create the assistant message immediately
     const wrap = g('ai-chat-msgs');
 
     if (!wrap) {
       throw new Error('Chat message container not found.');
     }
 
+    // Create empty assistant message immediately.
     const div = document.createElement('div');
-
     div.className = 'ai-msg ai-msg-bot';
-    div.textContent = '';
-
     wrap.appendChild(div);
 
-    // Read the SSE stream
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
 
     let buffer = '';
     let fullReply = '';
+    let firstChunk = true;
 
     while (true) {
       const { done, value } = await reader.read();
 
       if (done) break;
 
-      buffer += decoder.decode(value, {
-        stream: true
-      });
+      buffer += decoder.decode(value, { stream: true });
 
       const events = buffer.split('\n\n');
-
       buffer = events.pop() || '';
 
       for (const event of events) {
@@ -8449,36 +8485,66 @@ async function aiChatSend(e){
           if (!line.startsWith('data:')) continue;
 
           const jsonText = line.slice(5).trim();
-
           if (!jsonText) continue;
 
+          let data;
+
           try {
-            const data = JSON.parse(jsonText);
+            data = JSON.parse(jsonText);
+          } catch (err) {
+            console.warn('Waiting for complete SSE event...');
+            continue;
+          }
 
-            if (data.text) {
-              fullReply += data.text;
+          if (data.error) {
+            throw new Error(data.error);
+          }
 
-              // Update message immediately
-              div.textContent = fullReply;
+          if (data.text) {
+            fullReply += data.text;
 
-              wrap.scrollTop = wrap.scrollHeight;
+            // Stop "thinking" once actual text arrives.
+            if (firstChunk) {
+              firstChunk = false;
+
+              if (typingEl) {
+                typingEl.style.display = 'none';
+              }
             }
 
-            if (data.error) {
-              throw new Error(data.error);
-            }
+            // Render the currently received text.
+            renderAIMessage(div, fullReply);
 
-          } catch (parseError) {
-            console.error(
-              'Stream parsing error:',
-              parseError
-            );
+            wrap.scrollTop = wrap.scrollHeight;
           }
         }
       }
     }
 
-    // Save completed response to conversation history
+    // Handle anything left in the final buffer.
+    if (buffer.trim()) {
+      const lines = buffer.split('\n');
+
+      for (const line of lines) {
+        if (!line.startsWith('data:')) continue;
+
+        const jsonText = line.slice(5).trim();
+        if (!jsonText) continue;
+
+        try {
+          const data = JSON.parse(jsonText);
+
+          if (data.text) {
+            fullReply += data.text;
+          }
+        } catch (_) {}
+      }
+
+      if (fullReply) {
+        renderAIMessage(div, fullReply);
+      }
+    }
+
     if (fullReply) {
       aiChatHistory.push({
         role: 'assistant',
@@ -8487,7 +8553,6 @@ async function aiChatSend(e){
     }
 
   } catch (err) {
-
     console.error('AI chat error:', err);
 
     if (typingEl) {
@@ -8502,7 +8567,6 @@ async function aiChatSend(e){
     );
 
   } finally {
-
     aiChatBusy = false;
 
     if (typingEl) {
