@@ -8353,16 +8353,23 @@ async function aiChatSend(e){
 
   const inp = g('ai-chat-input');
   if (!inp) return false;
+
   const text = inp.value.trim();
   if (!text) return false;
 
   inp.value = '';
+
   aiChatAppendMsg(text, 'user');
-  aiChatHistory.push({ role: 'user', content: text });
+  aiChatHistory.push({
+    role: 'user',
+    content: text
+  });
 
   const typingEl = g('ai-chat-typing');
   const sendBtn = g('ai-chat-send-btn');
+
   aiChatBusy = true;
+
   if (typingEl) typingEl.style.display = 'block';
   if (sendBtn) sendBtn.disabled = true;
   inp.disabled = true;
@@ -8370,33 +8377,146 @@ async function aiChatSend(e){
   try {
     const res = await fetch(AI_CHAT_ENDPOINT, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text, history: aiChatHistory.slice(-10) })
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: text,
+        history: aiChatHistory.slice(-10)
+      })
     });
 
-    let data = {};
-    try { data = await res.json(); } catch (parseErr) { /* fall through to error below */ }
-
     if (!res.ok) {
-      throw new Error(data.error || ('Server error (' + res.status + ')'));
+      let errorMessage = `Server error (${res.status})`;
+
+      try {
+        const data = await res.json();
+        if (data.error) {
+          errorMessage = data.error;
+        }
+      } catch (_) {}
+
+      throw new Error(errorMessage);
     }
 
-    const reply = data.reply || "Sorry, I didn't get a response.";
-    aiChatAppendMsg(reply, 'bot');
-    aiChatHistory.push({ role: 'assistant', content: reply });
+    if (!res.body) {
+      throw new Error('Streaming is not supported by this browser.');
+    }
+
+    // Hide "thinking..." as soon as the first response starts
+    if (typingEl) {
+      typingEl.style.display = 'none';
+    }
+
+    // Create the assistant message immediately
+    const wrap = g('ai-chat-msgs');
+
+    if (!wrap) {
+      throw new Error('Chat message container not found.');
+    }
+
+    const div = document.createElement('div');
+
+    div.className = 'ai-msg ai-msg-bot';
+    div.textContent = '';
+
+    wrap.appendChild(div);
+
+    // Read the SSE stream
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+
+    let buffer = '';
+    let fullReply = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) break;
+
+      buffer += decoder.decode(value, {
+        stream: true
+      });
+
+      const events = buffer.split('\n\n');
+
+      buffer = events.pop() || '';
+
+      for (const event of events) {
+        const lines = event.split('\n');
+
+        for (const line of lines) {
+          if (!line.startsWith('data:')) continue;
+
+          const jsonText = line.slice(5).trim();
+
+          if (!jsonText) continue;
+
+          try {
+            const data = JSON.parse(jsonText);
+
+            if (data.text) {
+              fullReply += data.text;
+
+              // Update message immediately
+              div.textContent = fullReply;
+
+              wrap.scrollTop = wrap.scrollHeight;
+            }
+
+            if (data.error) {
+              throw new Error(data.error);
+            }
+
+          } catch (parseError) {
+            console.error(
+              'Stream parsing error:',
+              parseError
+            );
+          }
+        }
+      }
+    }
+
+    // Save completed response to conversation history
+    if (fullReply) {
+      aiChatHistory.push({
+        role: 'assistant',
+        content: fullReply
+      });
+    }
+
   } catch (err) {
+
     console.error('AI chat error:', err);
+
+    if (typingEl) {
+      typingEl.style.display = 'none';
+    }
+
     aiChatAppendMsg(
-      '⚠️ Sorry, I couldn\'t reach the assistant (' + err.message + '). Make sure the backend server is running.',
+      '⚠️ Sorry, I couldn\'t reach the assistant (' +
+      err.message +
+      ').',
       'bot'
     );
+
   } finally {
+
     aiChatBusy = false;
-    if (typingEl) typingEl.style.display = 'none';
-    if (sendBtn) sendBtn.disabled = false;
+
+    if (typingEl) {
+      typingEl.style.display = 'none';
+    }
+
+    if (sendBtn) {
+      sendBtn.disabled = false;
+    }
+
     inp.disabled = false;
     inp.focus();
   }
+
   return false;
 }
 </script>
