@@ -160,8 +160,6 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(
-    `Scholr AI backend listening on http://localhost:${PORT}`
-  );
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Scholr AI backend listening on port ${PORT}`);
 });
