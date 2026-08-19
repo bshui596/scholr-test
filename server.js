@@ -1,11 +1,6 @@
 /**
  * Scholr AI backend
- * ------------------
- * Express server that receives chat messages from the Scholr website,
- * sends them to Google's Gemini API, and returns the AI response.
- *
- * The Gemini API key is NEVER sent to the browser.
- * It only lives on this server, loaded from an environment variable.
+ * Streaming Gemini responses through Server-Sent Events (SSE)
  */
 
 require('dotenv').config();
@@ -16,11 +11,8 @@ const app = express();
 
 const PORT = process.env.PORT || 3001;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
 
-// Comma-separated list of origins allowed to call this API.
-// Example:
-// "https://yoursite.netlify.app,http://localhost:5500"
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGIN || '*')
   .split(',')
   .map(o => o.trim());
@@ -33,16 +25,15 @@ app.use(
 
 app.use(express.json({ limit: '100kb' }));
 
-// Simple health check.
+// Health check
 app.get('/', (req, res) => {
   res.send('Scholr AI backend is running. POST chat messages to /api/chat.');
 });
 
 app.post('/api/chat', async (req, res) => {
   try {
-    // Make sure the Gemini API key exists.
     if (!GEMINI_API_KEY) {
-      console.error('Missing GEMINI_API_KEY environment variable.');
+      console.error('Missing GEMINI_API_KEY.');
       return res.status(500).json({
         error: 'The server is not configured with an API key yet.',
       });
@@ -50,7 +41,6 @@ app.post('/api/chat', async (req, res) => {
 
     const { message, history } = req.body || {};
 
-    // Validate message.
     if (!message || typeof message !== 'string' || !message.trim()) {
       return res.status(400).json({
         error: 'A "message" string is required.',
@@ -63,7 +53,7 @@ app.post('/api/chat', async (req, res) => {
       });
     }
 
-    // Convert the website's conversation history into Gemini's format.
+    // Convert conversation history to Gemini format
     const contents = [];
 
     if (Array.isArray(history)) {
@@ -86,7 +76,6 @@ app.post('/api/chat', async (req, res) => {
       }
     }
 
-    // Add the newest user message.
     contents.push({
       role: 'user',
       parts: [
@@ -96,10 +85,10 @@ app.post('/api/chat', async (req, res) => {
       ],
     });
 
-    // Gemini API endpoint.
+    // Streaming Gemini endpoint
     const url =
       `https://generativelanguage.googleapis.com/v1beta/models/` +
-      `${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+      `${GEMINI_MODEL}:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`;
 
     const geminiRes = await fetch(url, {
       method: 'POST',
@@ -122,7 +111,6 @@ app.post('/api/chat', async (req, res) => {
       }),
     });
 
-    // Handle Gemini API errors.
     if (!geminiRes.ok) {
       const errText = await geminiRes.text();
 
@@ -133,30 +121,94 @@ app.post('/api/chat', async (req, res) => {
       );
 
       return res.status(502).json({
-        error:
-          'The AI service returned an error. Please try again shortly.',
+        error: 'The AI service returned an error. Please try again shortly.',
       });
     }
 
-    const data = await geminiRes.json();
+    // Tell browser we're sending an SSE stream
+    res.status(200);
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
 
-    // Extract Gemini's response text.
-    const reply = data?.candidates?.[0]?.content?.parts
-      ?.map(part => part.text || '')
-      .join('\n')
-      .trim();
+    // Flush headers immediately
+    if (typeof res.flushHeaders === 'function') {
+      res.flushHeaders();
+    }
 
-    res.json({
-      reply:
-        reply ||
-        "Sorry, I couldn't come up with a response to that.",
-    });
+    const reader = geminiRes.body.getReader();
+    const decoder = new TextDecoder();
+
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+
+      const lines = buffer.split('\n');
+
+      // Keep incomplete line for next chunk
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+
+        if (!trimmed || !trimmed.startsWith('data:')) {
+          continue;
+        }
+
+        const jsonText = trimmed.slice(5).trim();
+
+        if (!jsonText || jsonText === '[DONE]') {
+          continue;
+        }
+
+        try {
+          const chunk = JSON.parse(jsonText);
+
+          const text =
+            chunk?.candidates?.[0]?.content?.parts
+              ?.map(part => part.text || '')
+              .join('') || '';
+
+          if (text) {
+            res.write(
+              `data: ${JSON.stringify({ text })}\n\n`
+            );
+          }
+        } catch (parseError) {
+          console.error('Failed to parse Gemini chunk:', parseError);
+        }
+      }
+    }
+
+    // Tell browser the stream is finished
+    res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+    res.end();
+
   } catch (err) {
     console.error('Unexpected error in /api/chat:', err);
 
-    res.status(500).json({
-      error: 'Something went wrong on the server.',
-    });
+    // If headers haven't been sent, return normal JSON error
+    if (!res.headersSent) {
+      return res.status(500).json({
+        error: 'Something went wrong on the server.',
+      });
+    }
+
+    // Otherwise send an SSE error
+    try {
+      res.write(
+        `data: ${JSON.stringify({
+          error: 'Something went wrong on the server.',
+        })}\n\n`
+      );
+      res.end();
+    } catch (_) {}
   }
 });
 
