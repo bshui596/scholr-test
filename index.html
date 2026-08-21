@@ -1,20 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-t="forest" data-f="outfit">
 <head>
-
-<script>
-window.MathJax = {
-  tex: {
-    inlineMath: [['$', '$'], ['\\(', '\\)']],
-    displayMath: [['$$', '$$'], ['\\[', '\\]']]
-  },
-  svg: {
-    fontCache: 'global'
-  }
-};
-</script>
-
-<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Scholr — St. Robert CHS — GreenDigital Technologies Inc.</title>
@@ -40,6 +26,7 @@ window.MathJax = {
   --sh2:0 4px 16px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.04);
   --sh3:0 20px 60px rgba(0,0,0,.12),0 8px 24px rgba(0,0,0,.07);
   --rad:10px;--sw:260px;--th:52px;
+  --on-ac:#fff; /* text color used on top of --ac-colored surfaces (buttons, tabs, chips) — overridden per-theme below for dark themes whose --ac is too light for white text to stay readable */
   --font:'Outfit',sans-serif;--font-h:'Fraunces',serif;--font-m:'JetBrains Mono',monospace;
 }
 [data-t="ocean"]{--bg:#EFF4FB;--sur:#fff;--s2:#E3EDF8;--s3:#C8DDEF;--bor:#B0C8E2;--bor2:#88AACF;--ink:#091525;--ink2:#162E50;--ink3:#2E5C8E;--ink4:#6897C4;--ac:#1750A8;--ac2:#1D66CC;--acl:#BAD0F5;--acll:#E3EEFE}
@@ -48,17 +35,17 @@ window.MathJax = {
 [data-t="violet"]{--bg:#F6F0FB;--sur:#fff;--s2:#EFE6F8;--s3:#DED0F4;--bor:#C4ADE6;--bor2:#A07ED0;--ink:#140624;--ink2:#320B60;--ink3:#6030A8;--ink4:#9060C4;--ac:#6820D8;--ac2:#7B2EEC;--acl:#D0B8F8;--acll:#ECE3FE}
 [data-t="slate"]{--bg:#F3F5F8;--sur:#fff;--s2:#ECF0F4;--s3:#DDE4EA;--bor:#C0CCD8;--bor2:#96AAB8;--ink:#0C1520;--ink2:#1C2E3C;--ink3:#3E5668;--ink4:#7E98A8;--ac:#2C4A62;--ac2:#3A6080;--acl:#B8CCDA;--acll:#E0EBF2}
 [data-t="teal"]{--bg:#EEF9F8;--sur:#fff;--s2:#E2F6F4;--s3:#C0EEEA;--bor:#88D6D0;--bor2:#56BEB8;--ink:#001F1E;--ink2:#083E3C;--ink3:#147870;--ink4:#48B0A8;--ac:#0C706A;--ac2:#0D9088;--acl:#90E0D8;--acll:#C8F4F0}
-[data-t="midnight"]{--bg:#0D1524;--sur:#162035;--s2:#1C2A40;--s3:#243550;--bor:#2E4060;--bor2:#3C5478;--ink:#E2EAF4;--ink2:#A8BCCE;--ink3:#6888A4;--ink4:#3C5470;--ac:#7B9CF8;--ac2:#9AB4FC;--acl:#2A3C6C;--acll:#1A2A50}
+[data-t="midnight"]{--bg:#0D1524;--sur:#162035;--s2:#1C2A40;--s3:#243550;--bor:#2E4060;--bor2:#3C5478;--ink:#E2EAF4;--ink2:#A8BCCE;--ink3:#6888A4;--ink4:#3C5470;--ac:#7B9CF8;--ac2:#9AB4FC;--acl:#2A3C6C;--acll:#1A2A50;--on-ac:#0A1220}
 [data-t="cherry"]{--bg:#FAF0F0;--sur:#fff;--s2:#F5E4E4;--s3:#ECC8C8;--bor:#DDA0A0;--bor2:#C87070;--ink:#250000;--ink2:#540E0E;--ink3:#8E2828;--ink4:#C05858;--ac:#901818;--ac2:#B01E1E;--acl:#F4B8B8;--acll:#FCE8E8}
 [data-t="gold"]{--bg:#FAF7EE;--sur:#fff;--s2:#F6F0DC;--s3:#EDE4C0;--bor:#D8CC8C;--bor2:#C0A858;--ink:#241400;--ink2:#503000;--ink3:#8C5C00;--ink4:#C09030;--ac:#8A5000;--ac2:#AA6400;--acl:#EDD880;--acll:#FAF2C4}
-[data-t="noir"]{--bg:#111111;--sur:#1A1A1A;--s2:#222222;--s3:#2A2A2A;--bor:#333333;--bor2:#444444;--ink:#EEEEEE;--ink2:#CCCCCC;--ink3:#999999;--ink4:#555555;--ac:#E0E0E0;--ac2:#FFFFFF;--acl:#333333;--acll:#222222}
+[data-t="noir"]{--bg:#111111;--sur:#1A1A1A;--s2:#222222;--s3:#2A2A2A;--bor:#333333;--bor2:#444444;--ink:#EEEEEE;--ink2:#CCCCCC;--ink3:#999999;--ink4:#555555;--ac:#E0E0E0;--ac2:#FFFFFF;--acl:#333333;--acll:#222222;--on-ac:#0A0A0A}
 [data-t="mint"]{--bg:#F0FBF6;--sur:#fff;--s2:#E3F7EE;--s3:#C8EFD9;--bor:#9ADCBA;--bor2:#6BCFA0;--ink:#062018;--ink2:#0C4030;--ink3:#1A7A55;--ink4:#4DAA80;--ac:#0F7A4A;--ac2:#129960;--acl:#8ADCB8;--acll:#D0F5E6}
 [data-t="paper"]{--bg:#F8F4EC;--sur:#FFFEF8;--s2:#F2ECD8;--s3:#E8DEC4;--bor:#D4C8A8;--bor2:#BAA880;--ink:#2C1F0A;--ink2:#4A3418;--ink3:#7A5C30;--ink4:#AA8C60;--ac:#6B4C1A;--ac2:#8A6428;--acl:#D4BC88;--acll:#F0E8CC}
 [data-t="candy"]{--bg:#FEF0F8;--sur:#fff;--s2:#FCE4F4;--s3:#F8C8E8;--bor:#F0A0D0;--bor2:#E078B8;--ink:#3A0028;--ink2:#6A1048;--ink3:#B03880;--ink4:#D870A8;--ac:#C03078;--ac2:#E04898;--acl:#F5A8D8;--acll:#FDE0F0}
 [data-t="aurora"]{--bg:#F3F2FF;--sur:#FFFFFF;--s2:#E9E6FF;--s3:#D9D0FF;--bor:#B9AEF3;--bor2:#8B7AE6;--ink:#1B1550;--ink2:#31206E;--ink3:#5A4ABA;--ink4:#7D6CC1;--ac:#5B46EA;--ac2:#7E6CFF;--acl:#D8D4FB;--acll:#EFEAFE}
 [data-t="ember"]{--bg:#FFF5EB;--sur:#FFFFFF;--s2:#FCE8D9;--s3:#F5D4B8;--bor:#E0B79A;--bor2:#D48C5D;--ink:#432A0E;--ink2:#623E16;--ink3:#9C5B2A;--ink4:#CA843E;--ac:#C14B0D;--ac2:#F97316;--acl:#F9D6B1;--acll:#FFF2E6}
 [data-t="retro"]{--bg:#F5F1EA;--sur:#FFFFFF;--s2:#E7DED1;--s3:#D9C9B7;--bor:#B7A58A;--bor2:#947755;--ink:#3C2C1F;--ink2:#5A4532;--ink3:#7F5B3D;--ink4:#A67C4E;--ac:#A35B12;--ac2:#C07C3A;--acl:#E7D1B3;--acll:#F6EFE6}
-[data-t="moonrise"]{--bg:#0F192D;--sur:#17243F;--s2:#1F2F53;--s3:#2D3D6A;--bor:#3F537F;--bor2:#5269A4;--ink:#E6EDF8;--ink2:#B8C4E1;--ink3:#94A2CD;--ink4:#7A8EC5;--ac:#6B8CF8;--ac2:#8AA8FF;--acl:#2D3F72;--acll:#1D2A4D}
+[data-t="moonrise"]{--bg:#0F192D;--sur:#17243F;--s2:#1F2F53;--s3:#2D3D6A;--bor:#3F537F;--bor2:#5269A4;--ink:#E6EDF8;--ink2:#B8C4E1;--ink3:#94A2CD;--ink4:#7A8EC5;--ac:#6B8CF8;--ac2:#8AA8FF;--acl:#2D3F72;--acll:#1D2A4D;--on-ac:#0B1424}
 [data-t="custom"]{--bg:var(--c-bg,#F2F7F4);--sur:var(--c-sur,#fff);--s2:var(--c-s2,#EAF3EE);--s3:var(--c-s3,#D8ECE1);--bor:var(--c-bor,#C2D8CB);--bor2:var(--c-bor2,#9ABFAA);--ink:var(--c-ink,#0A1A10);--ink2:var(--c-ink2,#1C3D28);--ink3:var(--c-ink3,#3D7055);--ink4:var(--c-ink4,#7AA88A);--ac:var(--c-ac,#0F6B30);--ac2:var(--c-ac2,#158A3E);--acl:var(--c-acl,#B8E2C8);--acll:var(--c-acll,#E6F7ED)}
 
 /* ── FONTS ── */
@@ -205,13 +192,13 @@ img{max-width:100%}
    BUTTONS
 ══════════════════════════════════════════ */
 .btn{padding:var(--btn-pad,7px 14px);border-radius:var(--btn-rad,8px);font-size:12.5px;font-weight:600;transition:all .15s;display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-family:var(--font);line-height:1.2;border:none;text-decoration:none;letter-spacing:.01em}
-.bp{background:var(--ac);color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15),0 3px 8px rgba(0,0,0,.1)}
+.bp{background:var(--ac);color:var(--on-ac,#fff);box-shadow:0 1px 3px rgba(0,0,0,.15),0 3px 8px rgba(0,0,0,.1)}
 .bp:hover{filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 3px 12px rgba(0,0,0,.2)}
 .bp:active{transform:translateY(0);filter:brightness(.96)}
 [data-btn="ghost"] .btn.bp{background:transparent;color:var(--ac);border:1.5px solid var(--ac);box-shadow:none;}
 [data-btn="ghost"] .btn.bo{background:transparent;color:var(--ink3);border:1.5px solid var(--bor);}
 [data-btn="ghost"] .btn.bs{background:transparent;color:var(--ac);border:1.5px solid var(--acl);}
-[data-btn="neon"] .btn.bp{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;box-shadow:0 6px 20px rgba(15,107,48,.25);}
+[data-btn="neon"] .btn.bp{background:linear-gradient(135deg,var(--ac),var(--ac2));color:var(--on-ac,#fff);box-shadow:0 6px 20px rgba(15,107,48,.25);}
 [data-btn="glass"] .btn{background:rgba(255,255,255,.72);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.65);}
 [data-btn="flat"] .btn{box-shadow:none;}
 [data-btn="flat"] .btn.bp:hover{transform:none;filter:brightness(1.07);}
@@ -486,7 +473,7 @@ img{max-width:100%}
 .tb{padding:4px 8px;background:transparent;border-radius:6px;font-size:12px;color:var(--ink3);font-weight:600;transition:all .12s;white-space:nowrap;display:inline-flex;align-items:center;gap:2px;flex-shrink:0;line-height:1.4}
 .tb:hover{background:var(--sur);color:var(--ink2);box-shadow:var(--sh1)}
 .tb:active{transform:scale(.94)}
-.tb.on{background:var(--ac);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.tb.on{background:var(--ac);color:var(--on-ac,#fff);box-shadow:0 1px 4px rgba(0,0,0,.18)}
 .tbgrp .tb:hover{box-shadow:none;background:var(--acll)}
 .tbdiv{width:1px;height:18px;background:var(--bor2);margin:0 5px;flex-shrink:0;display:inline-block;vertical-align:middle;opacity:.6}
 .tbsel{padding:4px 6px;border:1px solid var(--bor);border-radius:6px;font-size:12px;background:var(--sur);color:var(--ink);outline:none;cursor:pointer;flex-shrink:0;font-family:var(--font);max-width:115px;transition:border-color .12s}
@@ -520,6 +507,16 @@ img{max-width:100%}
   align-self:flex-start;
 }
 [data-t="midnight"] .ed-doc{background:#162035;color:#E2EAF4}
+/* The "White page / Cream paper / Lined / Dotted" note styles always force a
+   literal light paper background (via inline JS in setDocStyle), regardless
+   of theme. In the dark themes, --ink (and other surface vars) are LIGHT
+   colors meant for light-on-dark text — so on those forced-light pages the
+   text, table headers, and blockquotes were unreadable (light-on-light).
+   Only "Transparent" keeps the theme's own dark background, so it's excluded
+   here and correctly keeps using the theme's normal --ink. */
+:is([data-t="midnight"],[data-t="noir"],[data-t="moonrise"]) .ed-doc:is([data-docstyle="white"],[data-docstyle="cream"],[data-docstyle="lined"],[data-docstyle="dotted"]){
+  --ink:#1A1A1A;--ink2:#3A3A3A;--ink3:#63666B;--ink4:#93969C;--bor:#E4E4E7;--s2:#F2F2F4;--acll:#EFF1F5;
+}
 .doc-tag{display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:3px 12px;border-radius:99px;margin-bottom:13px;cursor:pointer;user-select:none;transition:opacity .12s;letter-spacing:.2px}
 .doc-tag:hover{opacity:.75}
 .doc-ttl{
@@ -653,7 +650,7 @@ img{max-width:100%}
 .streak-card{background:var(--sur);border:1px solid var(--bor);border-radius:var(--rad);padding:14px;margin-bottom:12px;box-shadow:var(--sh1)}
 .streak-g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:8px}
 .s-day{aspect-ratio:1;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:700}
-.s-day.done{background:var(--ac);color:#fff}
+.s-day.done{background:var(--ac);color:var(--on-ac,#fff)}
 .s-day.empty{background:var(--s3);color:var(--ink4)}
 .s-day.today{border:2px solid var(--ac);color:var(--ac)}
 
@@ -778,7 +775,7 @@ img{max-width:100%}
 .cal-cell{border-right:1px solid var(--bor);border-bottom:1px solid var(--bor);min-height:100px;padding:4px;cursor:pointer;transition:background .1s;position:relative;vertical-align:top}
 .cal-cell:nth-child(7n){border-right:none}
 .cal-cell:hover{background:var(--s2)}
-.cal-cell.today .cal-dn{background:var(--ac);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-weight:800}
+.cal-cell.today .cal-dn{background:var(--ac);color:var(--on-ac,#fff);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-weight:800}
 .cal-cell.other-month{background:var(--s2)}
 .cal-cell.other-month .cal-dn{color:var(--ink4)}
 .cal-cell.selected{background:var(--acll)}
@@ -793,7 +790,7 @@ img{max-width:100%}
 .cal-week-dh{text-align:center;padding:8px 4px;font-size:11px;cursor:pointer}
 .cal-week-dh .wdn{font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--ink4);font-size:9px}
 .cal-week-dh .wdd{font-size:20px;font-weight:700;color:var(--ink2);width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;margin:0 auto}
-.cal-week-dh.today .wdd{background:var(--ac);color:#fff}
+.cal-week-dh.today .wdd{background:var(--ac);color:var(--on-ac,#fff)}
 .cal-week-body{display:flex;flex:1}
 .cal-time-col{width:52px;flex-shrink:0}
 .cal-time-slot{height:48px;display:flex;align-items:flex-start;justify-content:flex-end;padding-right:8px;font-size:9px;color:var(--ink4);font-family:var(--font-m);padding-top:2px}
@@ -824,7 +821,7 @@ img{max-width:100%}
 .cal-mini-dh{text-align:center;font-size:8px;font-weight:800;color:var(--ink4);padding:2px 0}
 .cal-mini-d{text-align:center;font-size:11px;padding:3px 1px;border-radius:4px;cursor:pointer;transition:background .1s}
 .cal-mini-d:hover{background:var(--s2)}
-.cal-mini-d.today{background:var(--ac);color:#fff;font-weight:800}
+.cal-mini-d.today{background:var(--ac);color:var(--on-ac,#fff);font-weight:800}
 .cal-mini-d.selected{background:var(--acll);color:var(--ac);font-weight:700}
 .cal-mini-d.other{color:var(--ink4)}
 .cal-mini-d.has-event::after{content:'';display:block;width:4px;height:4px;border-radius:50%;background:var(--ac);margin:0 auto;margin-top:-1px}
@@ -855,7 +852,7 @@ img{max-width:100%}
 .calc-kb.fn{color:var(--ink3);font-size:13px}
 .calc-kb.op{color:var(--ac);font-weight:800;font-size:16px;background:var(--s2)}
 .calc-kb.op:hover{background:var(--acll)}
-.calc-kb.eq{background:var(--ac);color:#fff;font-size:20px;font-weight:700}
+.calc-kb.eq{background:var(--ac);color:var(--on-ac,#fff);font-size:20px;font-weight:700}
 .calc-kb.eq:hover{background:var(--ac2)}
 .calc-sci-fn{background:#1f2937;border:none;padding:9px 4px;font-size:10.5px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace;color:#94a3b8;transition:all .12s;display:flex;align-items:center;justify-content:center}
 .calc-sci-fn:hover{background:#374151;color:#e2e8f0}
@@ -1010,50 +1007,6 @@ img{max-width:100%}
 
 /* ══════════════════════ RESPONSIVE ══════════════════════ */
 @media(max-width:700px){.d-grid{grid-template-columns:1fr}.kanban{grid-template-columns:1fr}.stat-grid{grid-template-columns:1fr 1fr}.wp-board{grid-template-columns:repeat(2,1fr)}}
-</style>
-<style>
-/* ══════════════════════════════════════════════
-   AI CHAT WIDGET — added for the AI assistant integration.
-   Uses the same theme variables as the rest of the site
-   (--sur, --bor, --ac, etc.) so it matches every theme.
-══════════════════════════════════════════════ */
-.ai-chat-fab{
-  position:fixed;right:22px;bottom:22px;z-index:8000;
-  width:54px;height:54px;border-radius:50%;
-  background:linear-gradient(135deg,var(--ac),var(--ac2));
-  color:#fff;font-size:23px;display:flex;align-items:center;justify-content:center;
-  box-shadow:var(--sh3);border:none;cursor:pointer;transition:transform .15s;
-}
-.ai-chat-fab:hover{transform:translateY(-2px) scale(1.04)}
-.ai-chat-panel{
-  position:fixed;right:22px;bottom:88px;z-index:8000;
-  width:340px;max-width:calc(100vw - 32px);height:460px;max-height:calc(100vh - 120px);
-  background:var(--sur);border:1px solid var(--bor);border-radius:14px;
-  box-shadow:var(--sh3);display:flex;flex-direction:column;overflow:hidden;
-  opacity:0;transform:translateY(12px) scale(.98);pointer-events:none;
-  transition:opacity .16s,transform .16s;
-}
-.ai-chat-panel.on{opacity:1;transform:none;pointer-events:auto}
-.ai-chat-head{
-  display:flex;align-items:center;justify-content:space-between;gap:8px;
-  padding:12px 14px;border-bottom:1px solid var(--bor);background:var(--s2);flex-shrink:0;
-}
-.ai-chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
-.ai-msg{max-width:84%;padding:8px 11px;border-radius:11px;font-size:12.5px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word}
-.ai-msg-bot{align-self:flex-start;background:var(--s2);color:var(--ink2);border-bottom-left-radius:3px}
-.ai-msg-user{align-self:flex-end;background:var(--ac);color:#fff;border-bottom-right-radius:3px}
-.ai-chat-typing{padding:0 14px 8px;font-size:11.5px;color:var(--ink4);flex-shrink:0}
-.ai-chat-input-row{display:flex;gap:8px;padding:10px;border-top:1px solid var(--bor);flex-shrink:0}
-.ai-chat-input-row input{
-  flex:1;border:1px solid var(--bor);border-radius:9px;padding:8px 11px;
-  font-size:12.5px;background:var(--bg);color:var(--ink);outline:none;
-}
-.ai-chat-input-row input:focus{border-color:var(--ac)}
-.ai-chat-input-row button:disabled{opacity:.6;cursor:default}
-@media(max-width:480px){
-  .ai-chat-panel{right:12px;left:12px;width:auto;bottom:82px}
-  .ai-chat-fab{right:16px;bottom:16px}
-}
 </style>
 <style>
 /* Split-screen overlay styles (larger by default) */
@@ -1735,7 +1688,7 @@ document.addEventListener('DOMContentLoaded',function(){
             </div>
             <!-- Result card -->
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px" id="gpa-results">
-              <div class="card" style="text-align:center;padding:20px;background:linear-gradient(135deg,var(--ac),var(--ac2));border:none;color:#fff">
+              <div class="card" style="text-align:center;padding:20px;background:linear-gradient(135deg,var(--ac),var(--ac2));border:none;color:var(--on-ac,#fff)">
                 <div style="font-family:var(--font-h);font-size:44px;font-weight:700;line-height:1" id="gpa-val">—</div>
                 <div style="font-size:11px;opacity:.8;margin-top:4px;text-transform:uppercase;letter-spacing:.6px">GPA</div>
               </div>
@@ -2050,9 +2003,9 @@ document.addEventListener('DOMContentLoaded',function(){
         <!-- ADMIN (hidden — only reachable via the admin unlock code) -->
         <div class="pg" id="pg-admin">
           <div style="max-width:820px">
-            <div class="greet" style="margin-bottom:16px;background:linear-gradient(135deg,var(--ac),var(--ac2));border-radius:14px;padding:20px 22px;color:#fff">
-              <h1 style="color:#fff">🔑 Admin Mode</h1>
-              <p style="color:rgba(255,255,255,.85);font-size:12.5px;margin-top:4px">Signed in as Brian Shui · GreenDigital Technologies Inc.</p>
+            <div class="greet" style="margin-bottom:16px;background:linear-gradient(135deg,var(--ac),var(--ac2));border-radius:14px;padding:20px 22px;color:var(--on-ac,#fff)">
+              <h1 style="color:var(--on-ac,#fff)">🔑 Admin Mode</h1>
+              <p style="color:var(--on-ac,#fff);opacity:.85;font-size:12.5px;margin-top:4px">Signed in as Brian Shui · GreenDigital Technologies Inc.</p>
             </div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px">
               <div class="card" style="padding:14px;text-align:center"><div style="font-size:22px;font-weight:800" id="ad-st-notes">0</div><div style="font-size:10.5px;color:var(--ink4);text-transform:uppercase;font-weight:700">Notes</div></div>
@@ -2593,33 +2546,6 @@ document.addEventListener('DOMContentLoaded',function(){
   </div><!-- /main -->
 </div><!-- /app -->
 
-<!-- ═══════════════════════════════════
-   AI ASSISTANT CHAT WIDGET (added)
-   Floating button + chat panel. Lives outside #app's flex layout
-   (position:fixed) so it never disturbs the existing page structure.
-═══════════════════════════════════ -->
-<button id="ai-chat-fab" class="ai-chat-fab" onclick="aiChatToggle()" title="Ask the Scholr Assistant" aria-label="Open AI assistant">🤖</button>
-
-<div id="ai-chat-panel" class="ai-chat-panel" role="dialog" aria-label="AI assistant chat">
-  <div class="ai-chat-head">
-    <div style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:18px">🤖</span>
-      <div>
-        <div style="font-weight:700;font-size:13px">Scholr Assistant</div>
-        <div style="font-size:10.5px;color:var(--ink4)">Ask about homework, studying, planning…</div>
-      </div>
-    </div>
-    <button class="icon-btn" onclick="aiChatToggle()" aria-label="Close AI assistant">✕</button>
-  </div>
-  <div id="ai-chat-msgs" class="ai-chat-msgs">
-    <div class="ai-msg ai-msg-bot">Hi! I'm your Scholr assistant. Ask me a study question, or for help planning your work 🙂</div>
-  </div>
-  <div id="ai-chat-typing" class="ai-chat-typing" style="display:none">Thinking…</div>
-  <form id="ai-chat-form" class="ai-chat-input-row" onsubmit="return aiChatSend(event)">
-    <input id="ai-chat-input" type="text" placeholder="Type a message…" autocomplete="off" maxlength="4000"/>
-    <button type="submit" class="btn bp sm" id="ai-chat-send-btn">Send</button>
-  </form>
-</div>
 <div id="img-resize-handle" class="img-resize-handle" onmousedown="imgHandleDown(event)" title="Drag to resize"></div>
 
 <!-- MODALS -->
@@ -3147,6 +3073,7 @@ document.addEventListener('DOMContentLoaded',function(){
     <button onclick="toggleAmbient('cafe')" class="amb-btn" id="amb-cafe" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:var(--font)">☕ Café</button>
     <button onclick="toggleAmbient('nature')" class="amb-btn" id="amb-nature" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:var(--font)">🌿 Nature</button>
     <button onclick="toggleAmbient('white')" class="amb-btn" id="amb-white" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:var(--font)">⬜ White</button>
+    <button onclick="toggleAmbient('lofi')" class="amb-btn" id="amb-lofi" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:var(--font)">🎵 Lofi</button>
   </div>
 </div>
 
@@ -4485,9 +4412,9 @@ function insProgress(){const v=prompt('Progress (0-100):','75');const pct=Math.m
 function insToggle(){cmd('insertHTML',`<details style="border:1px solid var(--bor);border-radius:9px;padding:10px 14px;margin:10px 0"><summary style="font-weight:600;cursor:pointer;user-select:none;font-size:14px">▶ Click to expand</summary><div contenteditable="true" style="margin-top:9px;font-size:13.5px;line-height:1.7;padding-top:8px;border-top:1px solid var(--bor)">Content here…</div></details><p></p>`);}
 function ins2Col(){cmd('insertHTML',`<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0"><div contenteditable="true" style="background:var(--s2);border-radius:9px;padding:12px;min-height:80px;font-size:13.5px;line-height:1.6">Left column…</div><div contenteditable="true" style="background:var(--s2);border-radius:9px;padding:12px;min-height:80px;font-size:13.5px;line-height:1.6">Right column…</div></div><p></p>`);}
 function ins3Col(){cmd('insertHTML',`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:12px 0"><div contenteditable="true" style="background:var(--s2);border-radius:9px;padding:11px;min-height:70px;font-size:13px;line-height:1.6">Col 1…</div><div contenteditable="true" style="background:var(--s2);border-radius:9px;padding:11px;min-height:70px;font-size:13px;line-height:1.6">Col 2…</div><div contenteditable="true" style="background:var(--s2);border-radius:9px;padding:11px;min-height:70px;font-size:13px;line-height:1.6">Col 3…</div></div><p></p>`);}
-function insFlashcard(){cmd('insertHTML',`<div style="perspective:600px;margin:12px 0;cursor:pointer" onclick="const b=this.querySelector('.fc-back');b.style.display=b.style.display==='none'?'block':'none';const f=this.querySelector('.fc-front');f.style.display=f.style.display==='none'?'block':'none'"><div class="fc-front" style="background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;border-radius:12px;padding:18px 20px;text-align:center;font-weight:700;font-size:15px" contenteditable="true">Front: Question</div><div class="fc-back" style="display:none;background:var(--s2);border:2px solid var(--bor);border-radius:12px;padding:18px 20px;font-size:14px;line-height:1.7" contenteditable="true">Back: Answer</div></div><p></p>`);}
-function insTimeline(){cmd('insertHTML',`<div style="margin:12px 0;padding-left:16px;border-left:3px solid var(--ac)"><div style="margin-bottom:12px"><span style="background:var(--ac);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px">Date 1</span><div contenteditable="true" style="margin-top:5px;font-size:13.5px;line-height:1.6">Event description…</div></div><div style="margin-bottom:12px"><span style="background:var(--ac);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px">Date 2</span><div contenteditable="true" style="margin-top:5px;font-size:13.5px;line-height:1.6">Event description…</div></div></div><p></p>`);}
-function insSteps(){cmd('insertHTML',`<ol style="list-style:none;padding:0;margin:12px 0;counter-reset:steps"><li style="display:flex;gap:12px;margin-bottom:12px;align-items:flex-start"><span style="background:var(--ac);color:#fff;font-size:11px;font-weight:800;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">1</span><div contenteditable="true" style="flex:1;font-size:13.5px;line-height:1.6;padding-top:2px">Step one…</div></li><li style="display:flex;gap:12px;margin-bottom:12px;align-items:flex-start"><span style="background:var(--ac);color:#fff;font-size:11px;font-weight:800;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">2</span><div contenteditable="true" style="flex:1;font-size:13.5px;line-height:1.6;padding-top:2px">Step two…</div></li><li style="display:flex;gap:12px;margin-bottom:4px;align-items:flex-start"><span style="background:var(--ac);color:#fff;font-size:11px;font-weight:800;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">3</span><div contenteditable="true" style="flex:1;font-size:13.5px;line-height:1.6;padding-top:2px">Step three…</div></li></ol><p></p>`);}
+function insFlashcard(){cmd('insertHTML',`<div style="perspective:600px;margin:12px 0;cursor:pointer" onclick="const b=this.querySelector('.fc-back');b.style.display=b.style.display==='none'?'block':'none';const f=this.querySelector('.fc-front');f.style.display=f.style.display==='none'?'block':'none'"><div class="fc-front" style="background:linear-gradient(135deg,var(--ac),var(--ac2));color:var(--on-ac,#fff);border-radius:12px;padding:18px 20px;text-align:center;font-weight:700;font-size:15px" contenteditable="true">Front: Question</div><div class="fc-back" style="display:none;background:var(--s2);border:2px solid var(--bor);border-radius:12px;padding:18px 20px;font-size:14px;line-height:1.7" contenteditable="true">Back: Answer</div></div><p></p>`);}
+function insTimeline(){cmd('insertHTML',`<div style="margin:12px 0;padding-left:16px;border-left:3px solid var(--ac)"><div style="margin-bottom:12px"><span style="background:var(--ac);color:var(--on-ac,#fff);font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px">Date 1</span><div contenteditable="true" style="margin-top:5px;font-size:13.5px;line-height:1.6">Event description…</div></div><div style="margin-bottom:12px"><span style="background:var(--ac);color:var(--on-ac,#fff);font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px">Date 2</span><div contenteditable="true" style="margin-top:5px;font-size:13.5px;line-height:1.6">Event description…</div></div></div><p></p>`);}
+function insSteps(){cmd('insertHTML',`<ol style="list-style:none;padding:0;margin:12px 0;counter-reset:steps"><li style="display:flex;gap:12px;margin-bottom:12px;align-items:flex-start"><span style="background:var(--ac);color:var(--on-ac,#fff);font-size:11px;font-weight:800;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">1</span><div contenteditable="true" style="flex:1;font-size:13.5px;line-height:1.6;padding-top:2px">Step one…</div></li><li style="display:flex;gap:12px;margin-bottom:12px;align-items:flex-start"><span style="background:var(--ac);color:var(--on-ac,#fff);font-size:11px;font-weight:800;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">2</span><div contenteditable="true" style="flex:1;font-size:13.5px;line-height:1.6;padding-top:2px">Step two…</div></li><li style="display:flex;gap:12px;margin-bottom:4px;align-items:flex-start"><span style="background:var(--ac);color:var(--on-ac,#fff);font-size:11px;font-weight:800;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">3</span><div contenteditable="true" style="flex:1;font-size:13.5px;line-height:1.6;padding-top:2px">Step three…</div></li></ol><p></p>`);}
 function insFootnote(){const n=document.querySelectorAll('[data-fn]').length+1;cmd('insertHTML',`<sup style="cursor:pointer;color:var(--ac);font-size:10px;font-weight:700" title="Footnote ${n}">[${n}]</sup>`);const fn=prompt('Footnote text:','');if(fn)cmd('insertHTML',`<div data-fn="${n}" style="border-top:1px solid var(--bor);margin-top:20px;padding-top:8px;font-size:11.5px;color:var(--ink3)">[${n}] ${fn}</div>`);}
 function insRating(){const v=prompt('Rating (1-5):','4');const r=Math.max(1,Math.min(5,parseInt(v)||4));cmd('insertHTML',`<div style="display:inline-flex;gap:2px;font-size:18px;margin:2px 4px">${'★'.repeat(r)}<span style="color:var(--bor2)">${'★'.repeat(5-r)}</span></div>`);}
 function insSpoiler(){cmd('insertHTML',`<span style="background:var(--ink);color:var(--ink);border-radius:4px;padding:1px 6px;cursor:pointer;user-select:none;font-size:13.5px" onclick="this.style.color=this.style.color===''||this.style.color==='var(--ink)'?'inherit':'var(--ink)'" title="Click to reveal" contenteditable="true">hidden text</span> `);}
@@ -6165,7 +6092,7 @@ function renderChecklist(){
   }
   list.innerHTML = DB.checklist.map(item =>
     `<div class="hw-item" style="padding:10px 0;border-bottom:1px solid var(--bor)">
-      <button class="icon-btn" style="width:28px;height:28px;border-radius:8px;${item.done?'background:var(--ac);color:#fff;':''}" onclick="toggleChecklist('${item.id}')">${item.done?'✓':'○'}</button>
+      <button class="icon-btn" style="width:28px;height:28px;border-radius:8px;${item.done?'background:var(--ac);color:var(--on-ac,#fff);':''}" onclick="toggleChecklist('${item.id}')">${item.done?'✓':'○'}</button>
       <div class="hw-body" style="min-width:0">
         <div class="hw-title${item.done?' done':''}" style="font-size:13px">${item.title}</div>
         <div class="hw-meta" style="margin-top:4px;color:var(--ink4);font-size:11px">${new Date(item.created).toLocaleDateString('en-CA')}</div>
@@ -7464,18 +7391,35 @@ function toggleFocus() {
   pomState.focusOpen = !pomState.focusOpen;
   ov.style.display = pomState.focusOpen ? 'flex' : 'none';
   if (pomState.focusOpen) { pomRenderDots(); pomUpdateDisplay(); }
+  else {
+    stopAmbient(); // leaving focus mode: kill any playing ambient sound
+    if (pomState.running) pomStop(); // ...and stop the session timer itself, not just hide it
+  }
 }
 let ambCtx = null;
-function toggleAmbient(type) {
-  // Simple oscillator-based ambient noise
-  const btn = g('amb-' + type);
+function stopAmbient() {
+  if (ambCtx) {
+    if (ambCtx._lofiInterval) clearInterval(ambCtx._lofiInterval);
+    try { ambCtx.close(); } catch(e) {}
+    ambCtx = null;
+  }
   document.querySelectorAll('.amb-btn').forEach(b => b.classList.remove('on'));
+}
+function toggleAmbient(type) {
+  // Simple oscillator-based ambient noise (plus a generative lofi beat option)
+  const btn = g('amb-' + type);
   const wasSameType = ambCtx && ambCtx._type === type;
-  if (ambCtx) { try { ambCtx.close(); } catch(e) {} ambCtx = null; }
+  stopAmbient();
   if (wasSameType) return; // clicking the currently-playing sound again just turns it off
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     ctx._type = type;
+    if (type === 'lofi') {
+      startLofiBeat(ctx);
+      ambCtx = ctx;
+      if (btn) btn.classList.add('on');
+      return;
+    }
     const bufLen = ctx.sampleRate * 2;
     const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
     const data = buf.getChannelData(0);
@@ -7491,6 +7435,111 @@ function toggleAmbient(type) {
     src.start(); ambCtx = ctx;
     if (btn) btn.classList.add('on');
   } catch(e) { toast('Audio not supported in this browser'); }
+}
+
+/* Generative lo-fi beat: soft chord pad (Am7 → Fmaj7 → Cmaj7 → G7) over a
+   laid-back kick/hat/snare pattern, plus a little vinyl crackle for texture.
+   Everything is scheduled ahead of time against ctx.currentTime so it stays
+   in the pocket, and the whole thing tears down via clearInterval + ctx.close(). */
+function startLofiBeat(ctx) {
+  const bpm = 78;
+  const secPerBeat = 60 / bpm;
+  const master = ctx.createGain();
+  master.gain.value = 0.32;
+  master.connect(ctx.destination);
+
+  // vinyl crackle bed
+  const cLen = ctx.sampleRate * 2;
+  const cBuf = ctx.createBuffer(1, cLen, ctx.sampleRate);
+  const cData = cBuf.getChannelData(0);
+  for (let i = 0; i < cLen; i++) cData[i] = (Math.random() * 2 - 1) * (Math.random() < 0.02 ? 1 : 0.12);
+  const cSrc = ctx.createBufferSource();
+  cSrc.buffer = cBuf; cSrc.loop = true;
+  const cFilter = ctx.createBiquadFilter();
+  cFilter.type = 'highpass'; cFilter.frequency.value = 2500;
+  const cGain = ctx.createGain(); cGain.gain.value = 0.02;
+  cSrc.connect(cFilter); cFilter.connect(cGain); cGain.connect(master);
+  cSrc.start();
+
+  // chord progression: Am7, Fmaj7, Cmaj7, G7 (one bar each)
+  const chords = [
+    [220.00, 261.63, 329.63, 392.00],
+    [174.61, 220.00, 261.63, 349.23],
+    [261.63, 329.63, 392.00, 493.88],
+    [196.00, 246.94, 293.66, 349.23],
+  ];
+
+  function playPad(freqs, time, dur) {
+    freqs.forEach(f => {
+      const o = ctx.createOscillator();
+      o.type = 'triangle';
+      o.frequency.value = f;
+      const filt = ctx.createBiquadFilter();
+      filt.type = 'lowpass'; filt.frequency.value = 1100;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0, time);
+      g.gain.linearRampToValueAtTime(0.045, time + 0.5);
+      g.gain.linearRampToValueAtTime(0, time + dur);
+      o.connect(filt); filt.connect(g); g.connect(master);
+      o.start(time); o.stop(time + dur + 0.05);
+    });
+  }
+  function playKick(time) {
+    const o = ctx.createOscillator();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(120, time);
+    o.frequency.exponentialRampToValueAtTime(45, time + 0.15);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.5, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + 0.25);
+    o.connect(g); g.connect(master);
+    o.start(time); o.stop(time + 0.3);
+  }
+  function playHat(time, vel) {
+    const len = Math.floor(ctx.sampleRate * 0.05);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const filt = ctx.createBiquadFilter(); filt.type = 'highpass'; filt.frequency.value = 7000;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime((vel || 0.06), time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
+    src.connect(filt); filt.connect(g); g.connect(master);
+    src.start(time);
+  }
+  function playSnare(time) {
+    const len = Math.floor(ctx.sampleRate * 0.15);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const filt = ctx.createBiquadFilter(); filt.type = 'bandpass'; filt.frequency.value = 1800;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.14, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + 0.15);
+    src.connect(filt); filt.connect(g); g.connect(master);
+    src.start(time);
+  }
+
+  let barIndex = 0, beatIndex = 0;
+  let nextNoteTime = ctx.currentTime + 0.1;
+  const scheduleAhead = 0.2;
+
+  function scheduler() {
+    while (nextNoteTime < ctx.currentTime + scheduleAhead) {
+      if (beatIndex === 0) playPad(chords[barIndex % chords.length], nextNoteTime, secPerBeat * 4 * 0.95);
+      if (beatIndex === 0 || beatIndex === 2) playKick(nextNoteTime);
+      if (beatIndex === 2) playSnare(nextNoteTime);
+      playHat(nextNoteTime, 0.06);
+      playHat(nextNoteTime + secPerBeat / 2, 0.035); // swung offbeat
+      nextNoteTime += secPerBeat;
+      beatIndex++;
+      if (beatIndex >= 4) { beatIndex = 0; barIndex++; }
+    }
+  }
+  scheduler();
+  ctx._lofiInterval = setInterval(scheduler, 50);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -7971,6 +8020,49 @@ function examIsoDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padSt
 function examDayLabel(d){ return d.toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric'}); }
 function examMkTask(text,kind){ return { id:'t'+Date.now()+Math.random().toString(36).slice(2,7), text, kind:kind||'topic', done:false }; }
 
+// Builds just the day scaffolding (dates/labels, which days are "review" days)
+// for an exam study plan — pure calendar math, no content. AI fills in the
+// actual task text; this keeps the exam date logic reliable either way.
+function examBuildDayScaffold(examDateStr, studyWindow){
+  const exam = new Date(examDateStr+'T00:00:00');
+  const today = new Date(); today.setHours(0,0,0,0);
+  const allDays = [];
+  const cursor = new Date(today);
+  while (cursor < exam) { allDays.push(new Date(cursor)); cursor.setDate(cursor.getDate()+1); }
+  if (!allDays.length) allDays.push(new Date(today));
+  const MAXW = studyWindow>0 ? studyWindow : 14;
+  const days = allDays.length > MAXW ? allDays.slice(-MAXW) : allDays;
+  const reviewDayCount = days.length >= 3 ? 1 : 0;
+  return days.map((d,i) => ({
+    date: examIsoDate(d), label: examDayLabel(d),
+    isReview: i >= days.length - reviewDayCount
+  }));
+}
+
+// Asks the AI backend to write the actual day-by-day task content for an
+// exam study plan. Falls back to the local template generator (genExamStudyPlan)
+// if the AI call fails or is unavailable, so exam saving never breaks.
+async function examGenerateAiPlan(topics, examDateStr, studyWindow, examTitle){
+  const scaffold = examBuildDayScaffold(examDateStr, studyWindow);
+  try {
+    const data = await aiPost('/api/examplan', {
+      topics, examTitle: examTitle || 'this exam', dayCount: scaffold.length
+    });
+    const aiDays = Array.isArray(data.days) ? data.days : null;
+    if (!aiDays || aiDays.length !== scaffold.length) throw new Error('Unexpected AI response shape');
+
+    return scaffold.map((day, i) => {
+      const tasks = (aiDays[i] || []).filter(t => typeof t === 'string' && t.trim()).slice(0, 3)
+        .map(t => examMkTask(t.trim(), day.isReview ? 'practice' : 'topic'));
+      if (!tasks.length) tasks.push(examMkTask('Review & practice', 'practice'));
+      return { date: day.date, label: day.label, tasks };
+    });
+  } catch (err) {
+    console.error('AI exam plan failed, using local generator:', err);
+    return genExamStudyPlan(topics, examDateStr, studyWindow);
+  }
+}
+
 // Builds a day-by-day study plan for the days leading up to the exam,
 // spreading the given topics across the available days (or generic
 // review tasks if no topics were given), with the day(s) closest to
@@ -7993,8 +8085,10 @@ function genExamStudyPlan(topics, examDateStr, studyWindow){
   const byDate = Object.fromEntries(plan.map(p=>[p.date, p]));
 
   if (!topics.length) {
+    const genericTasks = ['Practice problems & self-quiz','Review weak areas & flashcards','Timed practice test','Summarize key concepts','Redo missed problems'];
     topicDays.forEach((d,i) => {
-      byDate[examIsoDate(d)].tasks.push(examMkTask(i===0?'Review notes & course material':'Practice problems & self-quiz','practice'));
+      const text = i===0 ? 'Review notes & course material' : genericTasks[(i-1) % genericTasks.length];
+      byDate[examIsoDate(d)].tasks.push(examMkTask(text,'practice'));
     });
   } else if (topics.length <= topicDays.length) {
     const perDay = topicDays.length / topics.length;
@@ -8002,9 +8096,11 @@ function genExamStudyPlan(topics, examDateStr, studyWindow){
       const dayIdx = Math.min(topicDays.length-1, Math.floor(i*perDay));
       byDate[examIsoDate(topicDays[dayIdx])].tasks.push(examMkTask(t,'topic'));
     });
+    const genericTasks2 = ['Practice problems & self-quiz','Review weak areas & flashcards','Timed practice test'];
+    let gi = 0;
     topicDays.forEach(d => {
       const p = byDate[examIsoDate(d)];
-      if (!p.tasks.length) p.tasks.push(examMkTask('Practice problems & self-quiz','practice'));
+      if (!p.tasks.length) { p.tasks.push(examMkTask(genericTasks2[gi % genericTasks2.length],'practice')); gi++; }
     });
   } else {
     topics.forEach((t,i) => {
@@ -8063,7 +8159,7 @@ function examOpenEdit(id){
   setSel('exam-pri', String(ex.pri??1));
   g('exam-window').value = ex.window||14;
 }
-function examSave(){
+async function examSave(){
   const course = g('exam-co')?.value;
   const title = g('exam-title')?.value.trim();
   const date = g('exam-date')?.value;
@@ -8075,7 +8171,13 @@ function examSave(){
   const topics = (g('exam-topics')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
   const c = DB.courses.find(c=>c.name===course);
   const window = Math.max(1, Math.min(30, +g('exam-window')?.value || 14));
-  const plan = genExamStudyPlan(topics, date, window);
+
+  const saveBtn = document.querySelector('.mdl-acts .btn.bp[onclick="examSave()"]');
+  const prevLabel = saveBtn ? saveBtn.textContent : '';
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '✨ AI is planning…'; }
+  const plan = await examGenerateAiPlan(topics, date, window, title);
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = prevLabel; }
+
   const old = existingIdx>=0 ? DB.exams[existingIdx] : null;
   if (old) examMergePlanProgress(old.plan, plan);
   const exam = {
@@ -8327,17 +8429,356 @@ document.addEventListener('click', e => {
 
 <script>
 /* ══════════════════════════════════════════════
-   AI CHAT WIDGET — logic (added)
-   Talks to YOUR backend (server.js), never to Anthropic directly,
-   so the API key stays off the browser entirely.
+   SCHOLR AI — full frontend integration (v2)
+   Tabbed AI Tools panel: Chat (streaming) · Notes · Essay · Outline ·
+   Summarize · Flashcards · Quiz · Explain · Rewrite · Polish · Study Plan
+
+   Fully inline in this file — no manual copy/paste required.
 ══════════════════════════════════════════════ */
 
-// 👉 Change this to your deployed backend's URL once you host it
-// (see the deployment instructions). While testing on your own
-// computer, the default below matches `npm start` on server.js.
-const AI_CHAT_ENDPOINT = 'https://scholr-btv4.onrender.com/api/chat';
+/* ---- injected CSS ---- */
+const AI_CSS = `
+.ai-chat-fab{
+  position:fixed;right:22px;bottom:22px;z-index:8000;
+  width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,var(--ac),var(--ac2));
+  color:#fff;font-size:24px;display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--sh3);border:none;cursor:pointer;
+  transition:transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s;
+  animation:aiFabPop .4s cubic-bezier(.34,1.56,.64,1);
+}
+.ai-chat-fab:hover{transform:translateY(-3px) scale(1.06);box-shadow:0 10px 28px rgba(0,0,0,.25)}
+.ai-chat-fab:active{transform:scale(.94)}
+@keyframes aiFabPop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
 
-let aiChatHistory = [];   // [{role:'user'|'assistant', content:'...'}, ...]
+.ai-chat-panel{
+  position:fixed;right:22px;bottom:90px;z-index:8000;
+  width:380px;max-width:calc(100vw - 32px);height:520px;max-height:calc(100vh - 120px);
+  min-width:300px;min-height:340px;
+  background:var(--sur);border:1px solid var(--bor);border-radius:16px;
+  box-shadow:var(--sh3);display:flex;flex-direction:column;overflow:hidden;
+  opacity:0;transform:translateY(16px) scale(.96);pointer-events:none;
+  transition:opacity .2s ease,transform .2s cubic-bezier(.34,1.56,.64,1);
+}
+.ai-chat-panel.on{opacity:1;transform:none;pointer-events:auto}
+.ai-chat-panel.ai-dragging{transition:none;user-select:none}
+.ai-resize-handle{
+  position:absolute;left:2px;bottom:2px;width:16px;height:16px;cursor:nwse-resize;
+  background:linear-gradient(135deg,transparent 50%,var(--bor) 50%);border-radius:0 0 0 4px;z-index:2;
+}
+
+.ai-chat-head{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:12px 14px;border-bottom:1px solid var(--bor);background:var(--s2);flex-shrink:0;
+  cursor:grab;
+}
+.ai-chat-head:active{cursor:grabbing}
+.ai-tab-row{
+  display:flex;gap:4px;padding:8px 10px;border-bottom:1px solid var(--bor);
+  overflow-x:auto;flex-shrink:0;scrollbar-width:thin;
+}
+.ai-tab{
+  flex-shrink:0;padding:6px 11px;border-radius:20px;font-size:11.5px;font-weight:600;
+  background:transparent;border:1px solid var(--bor);color:var(--ink3);cursor:pointer;
+  transition:all .15s;white-space:nowrap;
+}
+.ai-tab:hover{border-color:var(--ac);color:var(--ac)}
+.ai-tab.active{background:var(--ac);border-color:var(--ac);color:var(--on-ac,#fff)}
+
+.ai-body{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.ai-body.hidden{display:none}
+
+.ai-chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.ai-msg{
+  max-width:86%;padding:9px 12px;border-radius:12px;font-size:12.5px;line-height:1.5;
+  white-space:pre-wrap;word-wrap:break-word;
+  animation:aiMsgIn .25s cubic-bezier(.2,.8,.3,1) both;
+}
+@keyframes aiMsgIn{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none}}
+.ai-msg-bot{align-self:flex-start;background:var(--s2);color:var(--ink2);border-bottom-left-radius:3px;border:1px solid var(--bor);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.ai-msg-user{align-self:flex-end;background:var(--ac);color:var(--on-ac,#fff);border-bottom-right-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+
+.ai-typing-dots{display:inline-flex;gap:3px;align-items:center;padding:2px 0}
+.ai-typing-dots span{
+  width:5px;height:5px;border-radius:50%;background:var(--ink4);
+  animation:aiDotBounce 1.1s infinite ease-in-out;
+}
+.ai-typing-dots span:nth-child(2){animation-delay:.15s}
+.ai-typing-dots span:nth-child(3){animation-delay:.3s}
+@keyframes aiDotBounce{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-4px);opacity:1}}
+
+.ai-chat-input-row{display:flex;gap:8px;padding:10px;border-top:1px solid var(--bor);flex-shrink:0}
+.ai-chat-input-row input{
+  flex:1;border:1px solid var(--bor);border-radius:9px;padding:8px 11px;
+  font-size:12.5px;background:var(--bg);color:var(--ink);outline:none;transition:border-color .15s;
+}
+.ai-chat-input-row input:focus{border-color:var(--ac);box-shadow:0 0 0 3px color-mix(in srgb, var(--ac) 18%, transparent)}
+.ai-chat-input-row button:disabled{opacity:.6;cursor:default}
+
+.ai-tool-pane{padding:14px;display:flex;flex-direction:column;gap:10px;flex:1;overflow-y:auto}
+.ai-tool-pane textarea{
+  width:100%;min-height:110px;resize:vertical;border:1px solid var(--bor);border-radius:9px;
+  padding:9px 11px;font-size:12.5px;font-family:inherit;background:var(--bg);color:var(--ink);
+  outline:none;transition:border-color .15s;
+}
+.ai-tool-pane textarea:focus{border-color:var(--ac);box-shadow:0 0 0 3px color-mix(in srgb, var(--ac) 18%, transparent)}
+.ai-tool-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ai-tool-row select{
+  border:1px solid var(--bor);border-radius:8px;padding:6px 9px;font-size:11.5px;
+  background:var(--bg);color:var(--ink);
+}
+.ai-tool-btn{
+  border:none;border-radius:9px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;
+  background:linear-gradient(135deg,var(--ac),var(--ac2));color:var(--on-ac,#fff);
+  transition:transform .15s,box-shadow .15s;
+}
+.ai-tool-btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.ai-tool-btn:active{transform:translateY(0) scale(.97)}
+.ai-tool-btn:disabled{opacity:.6;cursor:default;transform:none;box-shadow:none}
+
+.ai-tool-output{
+  border:1px solid var(--bor);border-radius:10px;padding:12px;font-size:12.5px;line-height:1.55;
+  white-space:pre-wrap;background:var(--s2);color:var(--ink2);min-height:40px;
+  animation:aiFadeIn .25s ease both;
+}
+@keyframes aiFadeIn{from{opacity:0}to{opacity:1}}
+
+.ai-flash-card{
+  border:1px solid var(--bor);border-radius:10px;padding:12px;background:var(--s2);cursor:pointer;
+  animation:aiMsgIn .25s ease both;transition:transform .15s;
+}
+.ai-flash-card:hover{transform:translateY(-2px)}
+.ai-flash-q{font-weight:600;font-size:12.5px;color:var(--ink)}
+.ai-flash-a{font-size:12px;color:var(--ink3);margin-top:6px;display:none}
+.ai-flash-card.flipped .ai-flash-a{display:block}
+
+.ai-quiz-q{border:1px solid var(--bor);border-radius:10px;padding:12px;background:var(--s2);animation:aiMsgIn .25s ease both}
+.ai-quiz-opt{
+  display:block;width:100%;text-align:left;padding:7px 10px;margin-top:6px;border-radius:8px;
+  border:1px solid var(--bor);background:var(--bg);color:var(--ink2);font-size:12px;cursor:pointer;
+  transition:all .15s;
+}
+.ai-quiz-opt:hover{border-color:var(--ac)}
+.ai-quiz-opt.correct{background:#16a34a22;border-color:#16a34a;color:#16a34a}
+.ai-quiz-opt.wrong{background:#dc262622;border-color:#dc2626;color:#dc2626}
+
+
+.ai-tab{position:relative;overflow:hidden}
+.ai-tool-btn{position:relative;overflow:hidden}
+.ai-chat-fab{position:fixed;}
+.ai-stream-cursor{display:inline-block;width:2px;height:1em;background:var(--ac);margin-left:1px;
+  vertical-align:middle;animation:aiCursorBlink .8s steps(1) infinite}
+@keyframes aiCursorBlink{50%{opacity:0}}
+.ai-tab.active{animation:aiTabPop .25s cubic-bezier(.34,1.56,.64,1)}
+@keyframes aiTabPop{0%{transform:scale(.9)}60%{transform:scale(1.04)}100%{transform:scale(1)}}
+
+@media(max-width:480px){
+  .ai-chat-panel{right:12px;left:12px;width:auto;bottom:82px}
+  .ai-chat-fab{right:16px;bottom:16px}
+}
+`;
+
+/* ---- injected HTML ---- */
+const AI_HTML = `
+<button id="ai-chat-fab" class="ai-chat-fab" onclick="aiChatToggle()" title="Scholr AI Tools" aria-label="Open AI tools">🤖</button>
+
+<div id="ai-chat-panel" class="ai-chat-panel" role="dialog" aria-label="AI assistant">
+  <div id="ai-resize-handle" class="ai-resize-handle" title="Drag to resize"></div>
+  <div class="ai-chat-head" id="ai-chat-head">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:18px">🤖</span>
+      <div>
+        <div style="font-weight:700;font-size:13px">Scholr AI</div>
+        <div style="font-size:10.5px;color:var(--ink4)">Chat, write, study — pick a tool</div>
+      </div>
+    </div>
+    <button class="icon-btn" onclick="aiChatToggle()" aria-label="Close">✕</button>
+  </div>
+
+  <div class="ai-tab-row" id="ai-tab-row">
+    <button class="ai-tab active bonus-ripple" data-tab="chat">💬 Chat</button>
+    <button class="ai-tab bonus-ripple" data-tab="notes">📝 Notes</button>
+    <button class="ai-tab bonus-ripple" data-tab="essay">✍️ Essay</button>
+    <button class="ai-tab bonus-ripple" data-tab="outline">🧩 Outline</button>
+    <button class="ai-tab bonus-ripple" data-tab="summarize">📄 Summarize</button>
+    <button class="ai-tab bonus-ripple" data-tab="flashcards">🗂️ Flashcards</button>
+    <button class="ai-tab bonus-ripple" data-tab="quiz">❓ Quiz</button>
+    <button class="ai-tab bonus-ripple" data-tab="explain">💡 Explain</button>
+    <button class="ai-tab bonus-ripple" data-tab="rewrite">🔁 Rewrite</button>
+    <button class="ai-tab bonus-ripple" data-tab="polish">✨ Polish</button>
+    <button class="ai-tab bonus-ripple" data-tab="studyplan">📅 Study Plan</button>
+  </div>
+
+  <!-- Chat pane -->
+  <div class="ai-body" id="ai-pane-chat">
+    <div id="ai-chat-msgs" class="ai-chat-msgs">
+      <div class="ai-msg ai-msg-bot">Hi! I'm your Scholr AI. Ask a question here, or use the tabs above for essays, notes, quizzes, and more 🙂</div>
+    </div>
+    <div id="ai-chat-typing" class="ai-chat-typing" style="display:none;padding:0 14px 8px">
+      <span class="ai-typing-dots"><span></span><span></span><span></span></span>
+    </div>
+    <form id="ai-chat-form" class="ai-chat-input-row" onsubmit="return aiChatSend(event)">
+      <input id="ai-chat-input" type="text" placeholder="Type a message…" autocomplete="off" maxlength="4000"/>
+      <button type="button" id="ai-mic-btn" class="ai-mic-btn" onclick="aiVoiceInput()" title="Voice input">🎤</button>\n    <button type="submit" class="ai-tool-btn bonus-ripple" id="ai-chat-send-btn">Send</button>
+    </form>
+  </div>
+
+  <!-- Notes -->
+  <div class="ai-body hidden" id="ai-pane-notes">
+    <div class="ai-tool-pane">
+      <textarea id="ai-notes-input" placeholder="Paste lecture text, a transcript, or a topic…"></textarea>
+      <div class="ai-tool-row"><button class="ai-tool-btn bonus-ripple" onclick="runAiTool('notes')">Generate Notes</button></div>
+      <div id="ai-notes-output" class="ai-tool-output" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- Essay -->
+  <div class="ai-body hidden" id="ai-pane-essay">
+    <div class="ai-tool-pane">
+      <textarea id="ai-essay-input" placeholder="Essay topic / prompt…" style="min-height:60px"></textarea>
+      <div class="ai-tool-row">
+        <select id="ai-essay-words"><option value="250">250 words</option><option value="400" selected>400 words</option><option value="600">600 words</option><option value="900">900 words</option></select>
+        <select id="ai-essay-tone"><option value="academic" selected>Academic</option><option value="persuasive">Persuasive</option><option value="analytical">Analytical</option><option value="casual">Casual</option></select>
+        <button class="ai-tool-btn bonus-ripple" onclick="runAiTool('essay')">Draft Essay</button>
+      </div>
+      <div id="ai-essay-output" class="ai-tool-output" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- Outline -->
+  <div class="ai-body hidden" id="ai-pane-outline">
+    <div class="ai-tool-pane">
+      <textarea id="ai-outline-input" placeholder="Topic for your outline…" style="min-height:60px"></textarea>
+      <div class="ai-tool-row"><button class="ai-tool-btn bonus-ripple" onclick="runAiTool('outline')">Generate Outline</button></div>
+      <div id="ai-outline-output" class="ai-tool-output" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- Summarize -->
+  <div class="ai-body hidden" id="ai-pane-summarize">
+    <div class="ai-tool-pane">
+      <textarea id="ai-summarize-input" placeholder="Paste your note here…"></textarea>
+      <div class="ai-tool-row"><button class="ai-tool-btn bonus-ripple" onclick="runAiTool('summarize')">Summarize</button></div>
+      <div id="ai-summarize-output" class="ai-tool-output" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- Flashcards -->
+  <div class="ai-body hidden" id="ai-pane-flashcards">
+    <div class="ai-tool-pane">
+      <textarea id="ai-flashcards-input" placeholder="Paste study material…"></textarea>
+      <div class="ai-tool-row">
+        <select id="ai-flashcards-count"><option value="5">5 cards</option><option value="8" selected>8 cards</option><option value="12">12 cards</option></select>
+        <button class="ai-tool-btn bonus-ripple" onclick="runAiTool('flashcards')">Generate Flashcards</button>
+      </div>
+      <div id="ai-flashcards-output" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+  </div>
+
+  <!-- Quiz -->
+  <div class="ai-body hidden" id="ai-pane-quiz">
+    <div class="ai-tool-pane">
+      <textarea id="ai-quiz-input" placeholder="Paste study material…"></textarea>
+      <div class="ai-tool-row">
+        <select id="ai-quiz-count"><option value="3">3 questions</option><option value="5" selected>5 questions</option><option value="8">8 questions</option></select>
+        <button class="ai-tool-btn bonus-ripple" onclick="runAiTool('quiz')">Generate Quiz</button>
+      </div>
+      <div id="ai-quiz-output" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+  </div>
+
+  <!-- Explain -->
+  <div class="ai-body hidden" id="ai-pane-explain">
+    <div class="ai-tool-pane">
+      <textarea id="ai-explain-input" placeholder="Paste a concept or question…"></textarea>
+      <div class="ai-tool-row">
+        <select id="ai-explain-level"><option value="simple" selected>Simple</option><option value="detailed">Detailed</option></select>
+        <button class="ai-tool-btn bonus-ripple" onclick="runAiTool('explain')">Explain</button>
+      </div>
+      <div id="ai-explain-output" class="ai-tool-output" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- Rewrite -->
+  <div class="ai-body hidden" id="ai-pane-rewrite">
+    <div class="ai-tool-pane">
+      <textarea id="ai-rewrite-input" placeholder="Paste text to rewrite…"></textarea>
+      <div class="ai-tool-row">
+        <select id="ai-rewrite-tone"><option value="clearer" selected>Clearer</option><option value="formal">Formal</option><option value="casual">Casual</option><option value="concise">Concise</option><option value="simpler">Simpler</option></select>
+        <button class="ai-tool-btn bonus-ripple" onclick="runAiTool('rewrite')">Rewrite</button>
+      </div>
+      <div id="ai-rewrite-output" class="ai-tool-output" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- Polish -->
+  <div class="ai-body hidden" id="ai-pane-polish">
+    <div class="ai-tool-pane">
+      <textarea id="ai-polish-input" placeholder="Paste writing to fix grammar/clarity…"></textarea>
+      <div class="ai-tool-row"><button class="ai-tool-btn bonus-ripple" onclick="runAiTool('polish')">Polish</button></div>
+      <div id="ai-polish-output" class="ai-tool-output" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- Study Plan -->
+  <div class="ai-body hidden" id="ai-pane-studyplan">
+    <div class="ai-tool-pane">
+      <textarea id="ai-studyplan-input" placeholder="Paste material or topics to study…"></textarea>
+      <div class="ai-tool-row">
+        <select id="ai-studyplan-days"><option value="3">3 days</option><option value="7" selected>7 days</option><option value="14">14 days</option></select>
+        <button class="ai-tool-btn bonus-ripple" onclick="runAiTool('studyplan')">Generate Plan</button>
+      </div>
+      <div id="ai-studyplan-output" class="ai-tool-output" style="display:none"></div>
+    </div>
+  </div>
+</div>
+`;
+
+/* ---- widget logic ---- */
+const AI_BASE = 'https://scholr-btv4.onrender.com';
+const AI_CHAT_ENDPOINT = AI_BASE + '/api/chat';
+const AI_TIMEOUT_MS = 20000; // fail fast with a clear message instead of hanging forever
+
+// ---------- Request timing/success log (feeds the Admin Panel stats) ----------
+function aiLoadReqLog(){
+  try { return JSON.parse(localStorage.getItem('scholr_ai_reqlog') || '[]'); } catch (_) { return []; }
+}
+let aiReqLog = aiLoadReqLog();
+function aiLogRequest(endpoint, ms, ok){
+  aiReqLog.push({ endpoint, ms, ok, t: Date.now() });
+  if (aiReqLog.length > 40) aiReqLog = aiReqLog.slice(-40);
+  try { localStorage.setItem('scholr_ai_reqlog', JSON.stringify(aiReqLog)); } catch (_) {}
+}
+function aiGetStats(){
+  if (!aiReqLog.length) return null;
+  const recent = aiReqLog.slice(-20);
+  const okCount = recent.filter(r => r.ok).length;
+  const avgMs = Math.round(recent.reduce((s,r) => s + r.ms, 0) / recent.length);
+  const last = recent[recent.length - 1];
+  const byEndpoint = {};
+  recent.forEach(r => {
+    if (!byEndpoint[r.endpoint]) byEndpoint[r.endpoint] = { count: 0, totalMs: 0 };
+    byEndpoint[r.endpoint].count++;
+    byEndpoint[r.endpoint].totalMs += r.ms;
+  });
+  return {
+    lastMs: last.ms, lastOk: last.ok, lastEndpoint: last.endpoint,
+    avgMs, successRate: Math.round((okCount / recent.length) * 100),
+    totalLogged: aiReqLog.length, byEndpoint
+  };
+}
+const aiSessionStart = Date.now();
+
+// ---------- Memory: restore chat history + panel size/position across reloads ----------
+function aiLoadHistory(){
+  try { return JSON.parse(localStorage.getItem('scholr_ai_chat_history') || '[]'); }
+  catch (_) { return []; }
+}
+function aiSaveHistory(){
+  try { localStorage.setItem('scholr_ai_chat_history', JSON.stringify(aiChatHistory.slice(-30))); } catch (_) {}
+}
+
+let aiChatHistory = aiLoadHistory();
 let aiChatOpen = false;
 let aiChatBusy = false;
 
@@ -8345,244 +8786,1123 @@ function aiChatToggle(){
   aiChatOpen = !aiChatOpen;
   const panel = g('ai-chat-panel');
   if (panel) panel.classList.toggle('on', aiChatOpen);
-  if (aiChatOpen) {
-    const inp = g('ai-chat-input');
-    if (inp) setTimeout(() => inp.focus(), 60);
+  if (aiChatOpen) { const inp = g('ai-chat-input'); if (inp) setTimeout(() => inp.focus(), 60); }
+}
+
+// Restore previous conversation into the chat pane on load (if any)
+function aiRestoreChatUI(){
+  const wrap = g('ai-chat-msgs');
+  if (!wrap || !aiChatHistory.length) return;
+  wrap.querySelectorAll('.ai-msg').forEach((el,i) => { if (i>0) el.remove(); }); // keep the greeting
+  aiChatHistory.forEach(turn => {
+    const el = aiChatAppendMsg(turn.content, turn.role === 'user' ? 'user' : 'bot');
+    if (turn.role === 'assistant' && el) { aiTypeset(el); aiAddSpeakerButton(el, turn.content); }
+  });
+}
+
+// ---------- Drag + resize the panel (position/size saved to localStorage) ----------
+function aiApplySavedGeometry(){
+  const panel = g('ai-chat-panel');
+  if (!panel) return;
+  try {
+    const geo = JSON.parse(localStorage.getItem('scholr_ai_panel_geo') || 'null');
+    if (geo) {
+      if (geo.w) panel.style.width = geo.w + 'px';
+      if (geo.h) panel.style.height = geo.h + 'px';
+      if (geo.top != null && geo.left != null) {
+        panel.style.top = geo.top + 'px'; panel.style.left = geo.left + 'px';
+        panel.style.right = 'auto'; panel.style.bottom = 'auto';
+      }
+    }
+  } catch (_) {}
+}
+function aiSaveGeometry(){
+  const panel = g('ai-chat-panel');
+  if (!panel) return;
+  const rect = panel.getBoundingClientRect();
+  localStorage.setItem('scholr_ai_panel_geo', JSON.stringify({
+    w: Math.round(rect.width), h: Math.round(rect.height),
+    top: Math.round(rect.top), left: Math.round(rect.left)
+  }));
+}
+(function initAiDragResize(){
+  document.addEventListener('mousedown', (e) => {
+    const head = e.target.closest && e.target.closest('#ai-chat-head');
+    const handle = e.target.closest && e.target.closest('#ai-resize-handle');
+    const panel = g('ai-chat-panel');
+    if (!panel) return;
+
+    if (head && !e.target.closest('button')) {
+      const rect = panel.getBoundingClientRect();
+      const offX = e.clientX - rect.left, offY = e.clientY - rect.top;
+      panel.classList.add('ai-dragging');
+      const onMove = (me) => {
+        panel.style.left = Math.max(4, Math.min(window.innerWidth - 60, me.clientX - offX)) + 'px';
+        panel.style.top = Math.max(4, Math.min(window.innerHeight - 60, me.clientY - offY)) + 'px';
+        panel.style.right = 'auto'; panel.style.bottom = 'auto';
+      };
+      const onUp = () => {
+        panel.classList.remove('ai-dragging');
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        aiSaveGeometry();
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    } else if (handle) {
+      const rect = panel.getBoundingClientRect();
+      const startX = e.clientX, startY = e.clientY, startW = rect.width, startH = rect.height, startLeft = rect.left;
+      panel.classList.add('ai-dragging');
+      const onMove = (me) => {
+        const newW = Math.max(300, startW - (me.clientX - startX));
+        const newH = Math.max(340, startH + (me.clientY - startY));
+        panel.style.width = newW + 'px';
+        panel.style.height = newH + 'px';
+        panel.style.left = (startLeft + (startW - newW)) + 'px';
+        panel.style.right = 'auto'; panel.style.bottom = 'auto';
+      };
+      const onUp = () => {
+        panel.classList.remove('ai-dragging');
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        aiSaveGeometry();
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    }
+  });
+  document.addEventListener('DOMContentLoaded', aiApplySavedGeometry);
+  if (document.readyState !== 'loading') aiApplySavedGeometry();
+})();
+
+// Tab switching
+document.addEventListener('click', (e) => {
+  const tab = e.target.closest && e.target.closest('.ai-tab');
+  if (!tab) return;
+  document.querySelectorAll('.ai-tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  document.querySelectorAll('.ai-body').forEach(p => p.classList.add('hidden'));
+  const pane = g('ai-pane-' + tab.dataset.tab);
+  if (pane) pane.classList.remove('hidden');
+});
+
+function aiTypeset(el){
+  if (window.MathJax && MathJax.typesetPromise) {
+    MathJax.typesetPromise([el]).catch(err => console.error('MathJax render error:', err));
   }
 }
 
-function aiChatAppendMsg(text, who) {
+// ---------- Streaming chat ----------
+function aiChatAppendMsg(text, who){
   const wrap = g('ai-chat-msgs');
   if (!wrap) return null;
-
   const div = document.createElement('div');
   div.className = 'ai-msg ' + (who === 'user' ? 'ai-msg-user' : 'ai-msg-bot');
-
-  if (who === 'user') {
-    div.textContent = text;
-  } else {
-    renderAIMessage(div, text);
-  }
-
+  div.textContent = text;
   wrap.appendChild(div);
   wrap.scrollTop = wrap.scrollHeight;
-
   return div;
 }
 
-function renderAIMessage(el, text) {
-  // Escape HTML first so AI output cannot inject HTML/scripts.
-  const escaped = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-
-  // Basic Markdown formatting
-  const html = escaped
-    .replace(/\*\*(.+?)\*\*/gs, '<strong>$1</strong>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\n/g, '<br>');
-
-  el.innerHTML = html;
-
-  // Render LaTeX
-  if (window.MathJax && MathJax.typesetPromise) {
-    MathJax.typesetClear([el]);
-
-    MathJax.typesetPromise([el]).catch(err => {
-      console.error('MathJax rendering error:', err);
-    });
-  }
-}
-
-async function aiChatSend(e) {
+async function aiChatSend(e){
   if (e) e.preventDefault();
   if (aiChatBusy) return false;
-
   const inp = g('ai-chat-input');
   if (!inp) return false;
-
   const text = inp.value.trim();
   if (!text) return false;
 
   inp.value = '';
-
   aiChatAppendMsg(text, 'user');
-
-  aiChatHistory.push({
-    role: 'user',
-    content: text
-  });
+  aiChatHistory.push({ role: 'user', content: text });
+  aiSaveHistory();
 
   const typingEl = g('ai-chat-typing');
   const sendBtn = g('ai-chat-send-btn');
-
   aiChatBusy = true;
-
   if (typingEl) typingEl.style.display = 'block';
   if (sendBtn) sendBtn.disabled = true;
   inp.disabled = true;
 
-  try {
-    const res = await fetch(AI_CHAT_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        message: text,
-        history: aiChatHistory.slice(-10)
-      })
-    });
+  const botEl = aiChatAppendMsg('', 'bot');
+  let fullReply = '';
+  const reqStart = performance.now();
 
-    if (!res.ok) {
-      let errorMessage = `Server error (${res.status})`;
+  // One retry on network-level failure (not on explicit server error messages) — keeps chat working through a hiccup instead of dying on the first blip.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    fullReply = '';
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
+    try {
+      const res = await fetch(AI_CHAT_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, history: aiChatHistory.slice(-10) }),
+        signal: controller.signal
+      });
+      clearTimeout(timer);
+      if (!res.ok || !res.body) {
+        let errMsg = 'Server error (' + res.status + ')';
+        try { const errData = await res.json(); if (errData.error) errMsg = errData.error; } catch (_) {}
+        throw new Error(errMsg);
+      }
+      if (typingEl) typingEl.style.display = 'none';
 
-      try {
-        const data = await res.json();
-        if (data.error) errorMessage = data.error;
-      } catch (_) {}
-
-      throw new Error(errorMessage);
-    }
-
-    if (!res.body) {
-      throw new Error('Streaming is not supported by this browser.');
-    }
-
-    const wrap = g('ai-chat-msgs');
-
-    if (!wrap) {
-      throw new Error('Chat message container not found.');
-    }
-
-    // Create empty assistant message immediately.
-    const div = document.createElement('div');
-    div.className = 'ai-msg ai-msg-bot';
-    wrap.appendChild(div);
-
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-
-    let buffer = '';
-    let fullReply = '';
-    let firstChunk = true;
-
-    while (true) {
-      const { done, value } = await reader.read();
-
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-
-      const events = buffer.split('\n\n');
-      buffer = events.pop() || '';
-
-      for (const event of events) {
-        const lines = event.split('\n');
-
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      const msgsWrap = g('ai-chat-msgs');
+      let buffer = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\\n');
+        buffer = lines.pop();
         for (const line of lines) {
-          if (!line.startsWith('data:')) continue;
-
-          const jsonText = line.slice(5).trim();
-          if (!jsonText) continue;
-
-          let data;
-
-          try {
-            data = JSON.parse(jsonText);
-          } catch (err) {
-            console.warn('Waiting for complete SSE event...');
-            continue;
-          }
-
-          if (data.error) {
-            throw new Error(data.error);
-          }
-
-          if (data.text) {
-            fullReply += data.text;
-
-            // Stop "thinking" once actual text arrives.
-            if (firstChunk) {
-              firstChunk = false;
-
-              if (typingEl) {
-                typingEl.style.display = 'none';
-              }
-            }
-
-            // Render the currently received text.
-            renderAIMessage(div, fullReply);
-
-            wrap.scrollTop = wrap.scrollHeight;
+          if (!line.startsWith('data: ')) continue;
+          const jsonStr = line.slice(6).trim();
+          if (!jsonStr) continue;
+          let parsed;
+          try { parsed = JSON.parse(jsonStr); } catch (_) { continue; }
+          if (parsed.error) throw new Error(parsed.error);
+          if (parsed.text) {
+            fullReply += parsed.text;
+            botEl.textContent = fullReply;
+            if (msgsWrap) msgsWrap.scrollTop = msgsWrap.scrollHeight;
           }
         }
       }
-    }
-
-    // Handle anything left in the final buffer.
-    if (buffer.trim()) {
-      const lines = buffer.split('\n');
-
-      for (const line of lines) {
-        if (!line.startsWith('data:')) continue;
-
-        const jsonText = line.slice(5).trim();
-        if (!jsonText) continue;
-
-        try {
-          const data = JSON.parse(jsonText);
-
-          if (data.text) {
-            fullReply += data.text;
-          }
-        } catch (_) {}
+      if (!fullReply.trim()) botEl.textContent = "Sorry, I couldn't come up with a response to that.";
+      aiChatHistory.push({ role: 'assistant', content: fullReply });
+      aiSaveHistory();
+      aiLogRequest('chat', Math.round(performance.now() - reqStart), true);
+      break; // success — no need to retry
+    } catch (err) {
+      clearTimeout(timer);
+      const isAbort = err.name === 'AbortError';
+      const isNetwork = err instanceof TypeError; // fetch network failure
+      if (attempt === 0 && (isAbort || isNetwork)) {
+        botEl.textContent = 'Connection hiccup — retrying…';
+        continue;
       }
-
-      if (fullReply) {
-        renderAIMessage(div, fullReply);
-      }
+      console.error('AI chat error:', err);
+      botEl.textContent = '⚠️ Sorry, I couldn\'t reach the assistant (' + (isAbort ? 'timed out' : err.message) + ').';
+      aiLogRequest('chat', Math.round(performance.now() - reqStart), false);
     }
-
-    if (fullReply) {
-      aiChatHistory.push({
-        role: 'assistant',
-        content: fullReply
-      });
-    }
-
-  } catch (err) {
-    console.error('AI chat error:', err);
-
-    if (typingEl) {
-      typingEl.style.display = 'none';
-    }
-
-    aiChatAppendMsg(
-      '⚠️ Sorry, I couldn\'t reach the assistant (' +
-      err.message +
-      ').',
-      'bot'
-    );
-
-  } finally {
-    aiChatBusy = false;
-
-    if (typingEl) {
-      typingEl.style.display = 'none';
-    }
-
-    if (sendBtn) {
-      sendBtn.disabled = false;
-    }
-
-    inp.disabled = false;
-    inp.focus();
   }
 
+  aiChatBusy = false;
+  if (typingEl) typingEl.style.display = 'none';
+  if (sendBtn) sendBtn.disabled = false;
+  inp.disabled = false;
+  inp.focus();
+  aiTypeset(botEl);
+  aiAddSpeakerButton(botEl, fullReply);
   return false;
 }
+
+// ---------- Shared helper for one-shot tool endpoints ----------
+// Includes a timeout + one automatic retry on network failure so a single
+// dropped request doesn't make a tool look broken. Also logs timing for the Admin Panel.
+async function aiPost(path, body){
+  const reqStart = performance.now();
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
+    try {
+      const res = await fetch(AI_BASE + path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: controller.signal
+      });
+      clearTimeout(timer);
+      let data = {};
+      try { data = await res.json(); } catch (_) {}
+      if (!res.ok) throw new Error(data.error || ('Server error (' + res.status + ')'));
+      aiLogRequest(path.replace('/api/',''), Math.round(performance.now() - reqStart), true);
+      return data;
+    } catch (err) {
+      clearTimeout(timer);
+      const isAbort = err.name === 'AbortError';
+      const isNetwork = err instanceof TypeError;
+      if (attempt === 0 && (isAbort || isNetwork)) continue;
+      aiLogRequest(path.replace('/api/',''), Math.round(performance.now() - reqStart), false);
+      throw isAbort ? new Error('Request timed out — please try again.') : err;
+    }
+  }
+}
+
+// ---------- Generic tool runner wired to the tab panes ----------
+const AI_TOOL_CONFIG = {
+  notes:      { endpoint: '/api/notes',      buildBody: () => ({ text: g('ai-notes-input').value.trim() }),
+                resultKey: 'notes',      outputId: 'ai-notes-output' },
+  essay:      { endpoint: '/api/essay',      buildBody: () => ({ topic: g('ai-essay-input').value.trim(), wordCount: +g('ai-essay-words').value, tone: g('ai-essay-tone').value }),
+                resultKey: 'essay',      outputId: 'ai-essay-output' },
+  outline:    { endpoint: '/api/outline',    buildBody: () => ({ topic: g('ai-outline-input').value.trim() }),
+                resultKey: 'outline',    outputId: 'ai-outline-output' },
+  summarize:  { endpoint: '/api/summarize',  buildBody: () => ({ text: g('ai-summarize-input').value.trim() }),
+                resultKey: 'summary',    outputId: 'ai-summarize-output' },
+  explain:    { endpoint: '/api/explain',    buildBody: () => ({ text: g('ai-explain-input').value.trim(), level: g('ai-explain-level').value }),
+                resultKey: 'explanation',outputId: 'ai-explain-output' },
+  rewrite:    { endpoint: '/api/rewrite',    buildBody: () => ({ text: g('ai-rewrite-input').value.trim(), tone: g('ai-rewrite-tone').value }),
+                resultKey: 'rewritten',  outputId: 'ai-rewrite-output' },
+  polish:     { endpoint: '/api/polish',     buildBody: () => ({ text: g('ai-polish-input').value.trim() }),
+                resultKey: 'improved',   outputId: 'ai-polish-output' },
+  studyplan:  { endpoint: '/api/studyplan',  buildBody: () => ({ text: g('ai-studyplan-input').value.trim(), days: +g('ai-studyplan-days').value }),
+                resultKey: 'plan',       outputId: 'ai-studyplan-output' },
+};
+
+async function runAiTool(tool){
+  if (tool === 'flashcards') return runAiFlashcards();
+  if (tool === 'quiz') return runAiQuiz();
+
+  const cfg = AI_TOOL_CONFIG[tool];
+  if (!cfg) return;
+  const body = cfg.buildBody();
+  const requiredVal = body.text || body.topic;
+  const outEl = g(cfg.outputId);
+  if (!requiredVal) { if (outEl){ outEl.style.display='block'; outEl.textContent = 'Please enter some text first.'; } return; }
+
+  const btn = event && event.target;
+  if (btn) { btn.disabled = true; btn.textContent = 'Working…'; }
+  if (outEl) { outEl.style.display = 'block'; outEl.textContent = 'Thinking…'; }
+
+  try {
+    const data = await aiPost(cfg.endpoint, body);
+    if (outEl) { outEl.textContent = data[cfg.resultKey] || 'No response.'; aiTypeset(outEl); }
+  } catch (err) {
+    console.error('AI tool error (' + tool + '):', err);
+    if (outEl) outEl.textContent = '⚠️ ' + err.message;
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = btn.textContent.replace('Working…', '') || 'Run'; }
+  }
+}
+
+// ---------- Flashcards (interactive flip cards) ----------
+async function runAiFlashcards(){
+  const text = g('ai-flashcards-input').value.trim();
+  const outWrap = g('ai-flashcards-output');
+  if (!text) { outWrap.innerHTML = ''; outWrap.textContent = 'Please paste some material first.'; return; }
+  const btn = event && event.target;
+  if (btn) { btn.disabled = true; btn.textContent = 'Working…'; }
+  outWrap.innerHTML = '<div class="ai-tool-output">Generating flashcards…</div>';
+  try {
+    const count = +g('ai-flashcards-count').value;
+    const { flashcards } = await aiPost('/api/flashcards', { text, count });
+    outWrap.innerHTML = '';
+    (flashcards || []).forEach(card => {
+      const div = document.createElement('div');
+      div.className = 'ai-flash-card';
+      const q = document.createElement('div'); q.className = 'ai-flash-q'; q.textContent = card.question;
+      const a = document.createElement('div'); a.className = 'ai-flash-a'; a.textContent = card.answer;
+      div.appendChild(q); div.appendChild(a);
+      div.onclick = () => { div.classList.toggle('flipped'); aiTypeset(div); };
+      outWrap.appendChild(div);
+    });
+    aiTypeset(outWrap);
+  } catch (err) {
+    console.error('Flashcards error:', err);
+    outWrap.innerHTML = '<div class="ai-tool-output">⚠️ ' + err.message + '</div>';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Generate Flashcards'; }
+  }
+}
+
+// ---------- Quiz (interactive, click an option to check it) ----------
+async function runAiQuiz(){
+  const text = g('ai-quiz-input').value.trim();
+  const outWrap = g('ai-quiz-output');
+  if (!text) { outWrap.innerHTML = ''; outWrap.textContent = 'Please paste some material first.'; return; }
+  const btn = event && event.target;
+  if (btn) { btn.disabled = true; btn.textContent = 'Working…'; }
+  outWrap.innerHTML = '<div class="ai-tool-output">Generating quiz…</div>';
+  try {
+    const count = +g('ai-quiz-count').value;
+    const { questions } = await aiPost('/api/quiz', { text, count });
+    outWrap.innerHTML = '';
+    (questions || []).forEach((q, qi) => {
+      const qDiv = document.createElement('div');
+      qDiv.className = 'ai-quiz-q';
+      const qText = document.createElement('div');
+      qText.style.fontWeight = '600'; qText.style.fontSize = '12.5px';
+      qText.textContent = (qi + 1) + '. ' + q.question;
+      qDiv.appendChild(qText);
+      (q.options || []).forEach((opt, oi) => {
+        const optBtn = document.createElement('button');
+        optBtn.type = 'button'; optBtn.className = 'ai-quiz-opt'; optBtn.textContent = opt;
+        optBtn.onclick = () => {
+          qDiv.querySelectorAll('.ai-quiz-opt').forEach(b => b.disabled = true);
+          if (oi === q.answerIndex) optBtn.classList.add('correct');
+          else {
+            optBtn.classList.add('wrong');
+            const correctBtn = qDiv.querySelectorAll('.ai-quiz-opt')[q.answerIndex];
+            if (correctBtn) correctBtn.classList.add('correct');
+          }
+        };
+        qDiv.appendChild(optBtn);
+      });
+      outWrap.appendChild(qDiv);
+    });
+    aiTypeset(outWrap);
+  } catch (err) {
+    console.error('Quiz error:', err);
+    outWrap.innerHTML = '<div class="ai-tool-output">⚠️ ' + err.message + '</div>';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Generate Quiz'; }
+  }
+}
+
+// Inject the CSS + HTML automatically once the page loads
+(function initAiTools(){
+  const styleTag = document.createElement('style');
+  styleTag.id = 'ai-tools-styles';
+  styleTag.textContent = AI_CSS;
+  document.head.appendChild(styleTag);
+
+  const container = document.createElement('div');
+  container.id = 'ai-tools-container';
+  container.innerHTML = AI_HTML;
+  document.body.appendChild(container);
+  aiApplySavedGeometry();
+  aiRestoreChatUI();
+})();
+
+/* ══════════════════════════════════════════════
+   SCHOLR — Bonus Codes (Settings) + extra animations
+   Self-contained: injects its own CSS/HTML/JS.
+   Paste this whole file before </body>, after the AI tools snippet.
+
+   WHAT IT DOES
+   - Adds a "🎁 Bonus Codes" section that auto-attaches into your
+     Settings panel if it finds a common settings container
+     (#settings, .settings, [id*="settings"]) — otherwise it shows
+     as its own small floating card, bottom-left, so nothing breaks.
+   - Redeeming a code unlocks a real feature flag in localStorage.
+   - Built-in codes (edit BONUS_CODES below to change these):
+       !BSHUI596!        -> Admin Panel (real DB stats, quick-nav,
+                             clear notes/HW, export/clear all data)
+       STR2030           -> Starter Pack, unlocked by default
+       STR-TOOLS-EXTRA   -> 3 extra AI tabs: Translate/Brainstorm/Citation
+       STR-FOCUS-TIMER   -> Pomodoro focus timer widget
+       STR-STREAK-DAYS   -> daily streak tracker badge
+       STR-AUTO-SPEAK    -> auto-reads AI replies aloud
+       STR-QUICK-EXPORT  -> one-click "export all data" button
+       STR-QUICK-NAV     -> quick-jump nav bar to any page
+   - Adds reusable animation classes (ripple buttons, card lift,
+     shimmer skeleton, staggered fade-in lists) you can reuse
+     anywhere else in Scholr too.
+══════════════════════════════════════════════ */
+
+const BONUS_CSS = `
+/* ---- reusable animation helpers ---- */
+@keyframes bonusFadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes bonusPop{0%{transform:scale(.85);opacity:0}60%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
+@keyframes bonusShimmer{0%{background-position:-200px 0}100%{background-position:200px 0}}
+@keyframes bonusRipple{to{transform:scale(3);opacity:0}}
+@keyframes bonusConfettiFall{to{transform:translateY(110vh) rotate(540deg);opacity:0}}
+@keyframes bonusRainbowShift{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}}
+@keyframes bonusCheckPop{0%{transform:scale(0) rotate(-20deg)}70%{transform:scale(1.15) rotate(4deg)}100%{transform:scale(1) rotate(0)}}
+
+.bonus-stagger > *{animation:bonusFadeUp .35s ease both}
+.bonus-stagger > *:nth-child(1){animation-delay:.02s}
+.bonus-stagger > *:nth-child(2){animation-delay:.06s}
+.bonus-stagger > *:nth-child(3){animation-delay:.10s}
+.bonus-stagger > *:nth-child(4){animation-delay:.14s}
+.bonus-stagger > *:nth-child(5){animation-delay:.18s}
+.bonus-stagger > *:nth-child(n+6){animation-delay:.22s}
+
+.bonus-card-hover{transition:transform .18s ease,box-shadow .18s ease}
+.bonus-card-hover:hover{transform:translateY(-3px);box-shadow:var(--sh3)}
+
+.bonus-ripple{position:relative;overflow:hidden}
+.bonus-ripple-fx{position:absolute;border-radius:50%;background:rgba(255,255,255,.5);
+  transform:scale(0);pointer-events:none;animation:bonusRipple .5s ease-out forwards}
+
+.bonus-skeleton{
+  background:linear-gradient(90deg,var(--s2) 25%,var(--bor) 37%,var(--s2) 63%);
+  background-size:400px 100%;animation:bonusShimmer 1.4s ease-in-out infinite;border-radius:8px;
+}
+
+.bonus-check-pop{animation:bonusCheckPop .4s cubic-bezier(.34,1.56,.64,1) both}
+/* ---- Bonus Codes panel ---- */
+.bonus-codes-wrap{padding:14px;display:flex;flex-direction:column;gap:10px;animation:bonusFadeUp .3s ease both}
+.bonus-codes-title{font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:6px}
+.bonus-codes-row{display:flex;gap:8px}
+.bonus-codes-row input{
+  flex:1;border:1px solid var(--bor);border-radius:9px;padding:8px 11px;font-size:12.5px;
+  background:var(--bg);color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.bonus-codes-row input:focus{border-color:var(--ac);box-shadow:0 0 0 3px color-mix(in srgb, var(--ac) 18%, transparent)}
+.bonus-codes-row button{
+  border:none;border-radius:9px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;color:var(--on-ac,#fff);
+  background:linear-gradient(135deg,var(--ac),var(--ac2));transition:transform .15s;
+}
+.bonus-codes-row button:hover{transform:translateY(-1px)}
+.bonus-codes-row button:active{transform:scale(.96)}
+.bonus-codes-msg{font-size:11.5px;min-height:15px}
+.bonus-codes-msg.ok{color:#16a34a}
+.bonus-codes-msg.err{color:#dc2626}
+
+.bonus-unlocked-list{display:flex;flex-direction:column;gap:6px}
+.bonus-unlocked-item{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:8px 10px;border:1px solid var(--bor);border-radius:9px;background:var(--s2);font-size:12px;
+}
+
+.bonus-admin-panel{
+  border:1px dashed var(--ac);border-radius:10px;padding:12px;margin-top:6px;
+  display:flex;flex-direction:column;gap:8px;background:var(--s2);
+}
+.bonus-admin-stat{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--bor)}
+.bonus-admin-btns{display:flex;gap:8px;flex-wrap:wrap}
+.bonus-admin-btns button{
+  border:1px solid var(--bor);background:var(--bg);color:var(--ink2);border-radius:8px;
+  padding:6px 10px;font-size:11.5px;cursor:pointer;transition:all .15s;
+}
+.bonus-admin-btns button:hover{border-color:var(--ac);color:var(--ac);transform:translateY(-1px)}
+
+.bonus-floating-card{
+  position:fixed;left:20px;bottom:20px;z-index:7500;width:280px;max-width:calc(100vw - 40px);
+  background:var(--sur);border:1px solid var(--bor);border-radius:14px;box-shadow:var(--sh3);
+  animation:bonusPop .3s cubic-bezier(.34,1.56,.64,1) both;
+}
+.bonus-floating-card summary{cursor:pointer;padding:10px 14px;font-weight:700;font-size:12.5px;list-style:none;
+  display:flex;align-items:center;gap:6px}
+.bonus-floating-card summary::-webkit-details-marker{display:none}
+`;
+
+const BONUS_CODES = {
+  '!BSHUI596!':       { flag: 'admin',       label: '🛠️ Admin Panel (full access)' },
+  'BSHUI596':         { flag: 'admin',       label: '🛠️ Admin Panel (full access)' },
+  'STR-TOOLS-EXTRA':  { flag: 'toolsExtra',  label: '🧰 3 extra AI tabs: Translate, Brainstorm, Citation' },
+  'STR-FOCUS-TIMER':  { flag: 'focus',       label: '⏱️ Pomodoro focus timer widget' },
+  'STR-STREAK-DAYS':  { flag: 'streak',      label: '🔥 Daily streak tracker' },
+  'STR-AUTO-SPEAK':   { flag: 'autospeak',   label: '🔊 Auto-read AI replies aloud' },
+  'STR-QUICK-EXPORT': { flag: 'quickexport', label: '📦 One-click export all your data' },
+  'STR-QUICK-NAV':    { flag: 'quicknav',    label: '🧭 Quick-jump nav (press any page instantly)' },
+  'STR-TASK-SORT':    { flag: 'tasksort',    label: '📊 Smart homework sort (auto priority by due date)' },
+  'STR-NOTE-PIN':     { flag: 'notepin',     label: '📌 Pin important notes to the top' },
+};
+
+// STR2030 is the default code — auto-applied for everyone, not shown as a redeemable entry.
+const BONUS_STARTER_FLAGS = ['toolsExtra','focus','streak','autospeak','quickexport','quicknav','tasksort','notepin'];
+
+function bonusGetUnlocked(){
+  try { return JSON.parse(localStorage.getItem('scholr_bonus_flags') || '{}'); }
+  catch (_) { return {}; }
+}
+function bonusSetUnlocked(flags){
+  localStorage.setItem('scholr_bonus_flags', JSON.stringify(flags));
+}
+
+function bonusRedeemCode(){
+  const input = g('bonus-code-input');
+  const msg = g('bonus-code-msg');
+  if (!input) return;
+  const code = input.value.trim().toUpperCase();
+  const entry = BONUS_CODES[code];
+  const flags = bonusGetUnlocked();
+
+  if (!code) { msg.textContent = 'Enter a code first.'; msg.className = 'bonus-codes-msg err'; return; }
+  if (!entry) { msg.textContent = '❌ Invalid code.'; msg.className = 'bonus-codes-msg err'; return; }
+  if (flags[entry.flag]) { msg.textContent = 'Already unlocked!'; msg.className = 'bonus-codes-msg err'; return; }
+
+  flags[entry.flag] = true;
+  if (entry.flag === 'starter') BONUS_STARTER_FLAGS.forEach(f => flags[f] = true);
+  bonusSetUnlocked(flags);
+  localStorage.setItem('scholr_bonus_last_code', code);
+
+  msg.textContent = '✅ Unlocked: ' + entry.label;
+  msg.className = 'bonus-codes-msg ok bonus-check-pop';
+  input.value = '';
+  bonusApplyEffects(flags);
+  bonusRenderUnlocked();
+}
+
+// Removes only the most recently redeemed code (does not touch admin unless
+// admin was the last one redeemed) — a quick "undo my last code" action.
+function bonusResetLastCode(){
+  const lastCode = localStorage.getItem('scholr_bonus_last_code');
+  const msg = g('bonus-code-msg');
+  if (!lastCode || !BONUS_CODES[lastCode]) {
+    if (msg) { msg.textContent = 'No previous code to reset.'; msg.className = 'bonus-codes-msg err'; }
+    return;
+  }
+  const flags = bonusGetUnlocked();
+  const entry = BONUS_CODES[lastCode];
+  delete flags[entry.flag];
+  if (entry.flag === 'starter') BONUS_STARTER_FLAGS.forEach(f => delete flags[f]);
+  bonusSetUnlocked(flags);
+  localStorage.removeItem('scholr_bonus_last_code');
+  if (msg) { msg.textContent = '↺ Reset: ' + entry.label; msg.className = 'bonus-codes-msg ok'; }
+  bonusApplyEffects(flags);
+  bonusRenderUnlocked();
+}
+
+// One press: wipes ALL redeemed codes (including admin) back to just the
+// default STR2030 starter set.
+function bonusResetAll(){
+  if (!confirm('Reset all bonus codes back to default? This removes admin access and every unlocked extra.')) return;
+  const flags = { starter: true };
+  BONUS_STARTER_FLAGS.forEach(f => flags[f] = true);
+  bonusSetUnlocked(flags);
+  localStorage.removeItem('scholr_bonus_last_code');
+  bonusApplyEffects(flags);
+  bonusRenderUnlocked();
+  const msg = g('bonus-code-msg');
+  if (msg) { msg.textContent = '✅ Reset to default (STR2030 only)'; msg.className = 'bonus-codes-msg ok bonus-check-pop'; }
+}
+
+// Turns OFF one specific feature (even a default starter one) — always
+// removable, individually, regardless of how it was unlocked.
+function bonusRemoveFeature(flag){
+  const flags = bonusGetUnlocked();
+  delete flags[flag];
+  bonusSetUnlocked(flags);
+  bonusApplyEffects(flags);   // tears down the matching onscreen element
+  bonusRenderUnlocked();
+}
+
+function bonusRenderUnlocked(){
+  const listEl = g('bonus-unlocked-list');
+  const adminSlot = g('bonus-admin-slot');
+  if (!listEl) return;
+  const flags = bonusGetUnlocked();
+  listEl.innerHTML = '';
+  const items = Object.entries(BONUS_CODES).filter(([, v]) => flags[v.flag]);
+  if (!items.length) {
+    listEl.innerHTML = '<div style="font-size:11.5px;color:var(--ink4)">No bonus features unlocked yet.</div>';
+  } else {
+    items.forEach(([code, v]) => {
+      const row = document.createElement('div');
+      row.className = 'bonus-unlocked-item bonus-check-pop';
+      row.innerHTML = `<span>${v.label}</span><span style="display:flex;align-items:center;gap:6px"><span style="color:var(--ink4);font-size:10.5px">${code}</span><button class="bonus-ripple" onclick="bonusRemoveFeature('${v.flag}')" title="Turn off" style="border:none;background:transparent;color:var(--ink4);cursor:pointer;font-size:13px;padding:2px 4px">✕</button></span>`;
+      listEl.appendChild(row);
+    });
+  }
+  if (adminSlot) adminSlot.innerHTML = flags.admin ? bonusAdminPanelHtml() : '';
+  bonusApplyFeatureHooks(flags);
+}
+
+// ---------- Admin Panel: real access to real app data ----------
+function bonusAdminPanelHtml(){
+  let keyCount = 0, approxBytes = 0;
+  try {
+    keyCount = localStorage.length;
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      approxBytes += (k?.length || 0) + (localStorage.getItem(k)?.length || 0);
+    }
+  } catch (_) {}
+
+  const noteCount = (typeof DB !== 'undefined' && Array.isArray(DB.notes)) ? DB.notes.length : '—';
+  const courseCount = (typeof DB !== 'undefined' && Array.isArray(DB.courses)) ? DB.courses.length : '—';
+  const hwCount = (typeof DB !== 'undefined' && Array.isArray(DB.hw)) ? DB.hw.length : '—';
+
+  const navButtons = Object.keys(typeof PG !== 'undefined' ? PG : {})
+    .map(id => `<button onclick="go('${id}')">${(typeof PG!=='undefined'&&PG[id])||id}</button>`)
+    .join('');
+
+  // ---- AI performance stats ----
+  const stats = aiGetStats();
+  const perfRows = stats ? `
+      <div class="bonus-admin-stat"><span>Last AI response</span><span>${stats.lastMs} ms ${stats.lastOk ? '✅' : '❌'} (${stats.lastEndpoint})</span></div>
+      <div class="bonus-admin-stat"><span>Avg response (last 20)</span><span>${stats.avgMs} ms</span></div>
+      <div class="bonus-admin-stat"><span>Success rate (last 20)</span><span>${stats.successRate}%</span></div>
+      <div class="bonus-admin-stat"><span>Total AI requests logged</span><span>${stats.totalLogged}</span></div>
+      ${Object.entries(stats.byEndpoint).map(([ep,d]) =>
+        `<div class="bonus-admin-stat" style="padding-left:10px;font-size:11px;opacity:.8"><span>↳ ${ep}</span><span>${Math.round(d.totalMs/d.count)} ms avg (${d.count}×)</span></div>`
+      ).join('')}
+  ` : `<div class="bonus-admin-stat"><span>AI requests</span><span>none logged yet</span></div>`;
+
+  // ---- "cool data" ----
+  const sessionMin = ((Date.now() - aiSessionStart) / 60000).toFixed(1);
+  const theme = document.documentElement.getAttribute('data-t') || 'default';
+  const online = navigator.onLine ? 'Online ✅' : 'Offline ❌';
+  const unlockedCount = Object.values(bonusGetUnlocked()).filter(Boolean).length;
+
+  return `
+    <div class="bonus-admin-panel bonus-check-pop">
+      <div style="font-weight:700;font-size:12.5px">🛠️ Admin Panel</div>
+
+      <div style="font-size:11px;color:var(--ink4);margin-top:2px">⚡ AI Performance</div>
+      ${perfRows}
+
+      <div style="font-size:11px;color:var(--ink4);margin-top:4px">📊 App Data</div>
+      <div class="bonus-admin-stat"><span>Notes</span><span>${noteCount}</span></div>
+      <div class="bonus-admin-stat"><span>Courses</span><span>${courseCount}</span></div>
+      <div class="bonus-admin-stat"><span>Homework items</span><span>${hwCount}</span></div>
+      <div class="bonus-admin-stat"><span>localStorage keys</span><span>${keyCount}</span></div>
+      <div class="bonus-admin-stat"><span>Approx. storage used</span><span>${(approxBytes/1024).toFixed(1)} KB</span></div>
+      <div class="bonus-admin-stat"><span>Debug mode</span><span id="bonus-debug-state">${localStorage.getItem('scholr_debug') === '1' ? 'ON' : 'OFF'}</span></div>
+
+      <div style="font-size:11px;color:var(--ink4);margin-top:4px">🧭 Session</div>
+      <div class="bonus-admin-stat"><span>Time on page</span><span>${sessionMin} min</span></div>
+      <div class="bonus-admin-stat"><span>Theme</span><span>${theme}</span></div>
+      <div class="bonus-admin-stat"><span>Network</span><span>${online}</span></div>
+      <div class="bonus-admin-stat"><span>Screen size</span><span>${window.innerWidth}×${window.innerHeight}</span></div>
+      <div class="bonus-admin-stat"><span>Bonus features unlocked</span><span>${unlockedCount}</span></div>
+
+      <div style="font-size:11px;color:var(--ink4);margin-top:4px">Jump to any page:</div>
+      <div class="bonus-admin-btns">${navButtons}</div>
+
+      <div style="font-size:11px;color:var(--ink4);margin-top:4px">Actions:</div>
+      <div class="bonus-admin-btns">
+        <button onclick="bonusToggleDebug()">Toggle debug mode</button>
+        <button onclick="bonusExportData()">Export all data (JSON)</button>
+        <button onclick="bonusUnlockEverything()">Unlock every bonus feature</button>
+        <button onclick="bonusAdminClearNotes()">Clear all notes</button>
+        <button onclick="bonusAdminClearHW()">Clear all homework</button>
+        <button onclick="bonusConfirmClear()">⚠️ Clear ALL local data</button>
+        <button onclick="bonusRenderUnlocked()">🔄 Refresh stats</button>
+      </div>
+    </div>`;
+}
+
+function bonusToggleDebug(){
+  const on = localStorage.getItem('scholr_debug') === '1';
+  localStorage.setItem('scholr_debug', on ? '0' : '1');
+  const el = g('bonus-debug-state');
+  if (el) el.textContent = on ? 'OFF' : 'ON';
+}
+
+function bonusUnlockEverything(){
+  const flags = bonusGetUnlocked();
+  Object.values(BONUS_CODES).forEach(v => flags[v.flag] = true);
+  bonusSetUnlocked(flags);
+  bonusApplyEffects(flags);
+  bonusRenderUnlocked();
+  if (typeof toast === 'function') toast('✅ All bonus features unlocked');
+}
+
+function bonusAdminClearNotes(){
+  if (typeof DB === 'undefined') return;
+  if (!confirm('Delete ALL notes? This cannot be undone.')) return;
+  DB.notes = []; noteId = null;
+  if (typeof save === 'function') save();
+  if (typeof renderDashboard === 'function') renderDashboard();
+  if (typeof toast === 'function') toast('All notes cleared');
+  bonusRenderUnlocked();
+}
+
+function bonusAdminClearHW(){
+  if (typeof DB === 'undefined') return;
+  if (!confirm('Delete ALL homework items? This cannot be undone.')) return;
+  DB.hw = [];
+  if (typeof save === 'function') save();
+  if (typeof renderDashboard === 'function') renderDashboard();
+  if (typeof toast === 'function') toast('All homework cleared');
+  bonusRenderUnlocked();
+}
+
+function bonusExportData(){
+  const data = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    data[k] = localStorage.getItem(k);
+  }
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'scholr-data-export.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function bonusConfirmClear(){
+  if (!confirm('This will erase ALL locally saved Scholr data on this device. This cannot be undone. Continue?')) return;
+  localStorage.clear();
+  location.reload();
+}
+
+// ---------- Apply genuine (non-theme) feature unlocks ----------
+function bonusApplyEffects(flags){
+  bonusApplyFeatureHooks(flags);
+}
+
+function bonusApplyFeatureHooks(flags){
+  // Extra AI tabs: Translate / Brainstorm / Citation
+  if (flags.toolsExtra && !g('ai-tab-extra-added')) {
+    const tabRow = g('ai-tab-row');
+    const body = g('ai-chat-panel');
+    if (tabRow && body) {
+      const marker = document.createElement('span');
+      marker.id = 'ai-tab-extra-added';
+      marker.style.display = 'none';
+      tabRow.appendChild(marker);
+
+      [['translate','🌐 Translate'], ['brainstorm','💭 Brainstorm'], ['citation','📚 Citation']].forEach(([key,label]) => {
+        const tabBtn = document.createElement('button');
+        tabBtn.className = 'ai-tab bonus-ripple ai-tab-extra';
+        tabBtn.dataset.tab = key;
+        tabBtn.textContent = label;
+        tabRow.appendChild(tabBtn);
+
+        const pane = document.createElement('div');
+        pane.className = 'ai-body hidden ai-tab-extra-pane';
+        pane.id = 'ai-pane-' + key;
+        if (key === 'translate') {
+          pane.innerHTML = `<div class="ai-tool-pane">
+            <textarea id="ai-translate-input" placeholder="Text to translate…"></textarea>
+            <div class="ai-tool-row">
+              <select id="ai-translate-lang"><option>Spanish</option><option>French</option><option>German</option><option>Mandarin Chinese</option><option>Japanese</option></select>
+              <button class="ai-tool-btn bonus-ripple" onclick="runAiExtraTool('translate')">Translate</button>
+            </div>
+            <div id="ai-translate-output" class="ai-tool-output" style="display:none"></div>
+          </div>`;
+        } else if (key === 'brainstorm') {
+          pane.innerHTML = `<div class="ai-tool-pane">
+            <textarea id="ai-brainstorm-input" placeholder="Topic to brainstorm…" style="min-height:60px"></textarea>
+            <div class="ai-tool-row"><button class="ai-tool-btn bonus-ripple" onclick="runAiExtraTool('brainstorm')">Brainstorm</button></div>
+            <div id="ai-brainstorm-output" style="display:flex;flex-direction:column;gap:6px"></div>
+          </div>`;
+        } else {
+          pane.innerHTML = `<div class="ai-tool-pane">
+            <textarea id="ai-citation-input" placeholder="Paste source info (title, author, URL, etc.)…" style="min-height:60px"></textarea>
+            <div class="ai-tool-row">
+              <select id="ai-citation-style"><option>APA</option><option>MLA</option><option>Chicago</option></select>
+              <button class="ai-tool-btn bonus-ripple" onclick="runAiExtraTool('citation')">Generate Citation</button>
+            </div>
+            <div id="ai-citation-output" class="ai-tool-output" style="display:none"></div>
+          </div>`;
+        }
+        body.appendChild(pane);
+      });
+    }
+  }
+  if (!flags.toolsExtra && g('ai-tab-extra-added')) {
+    document.querySelectorAll('.ai-tab-extra').forEach(el => el.remove());
+    document.querySelectorAll('.ai-tab-extra-pane').forEach(el => el.remove());
+    const marker = g('ai-tab-extra-added'); if (marker) marker.remove();
+    // if an extra tab was the active one, fall back to Chat
+    const activeTab = document.querySelector('.ai-tab.active');
+    if (!activeTab) {
+      const chatTab = document.querySelector('.ai-tab[data-tab="chat"]');
+      if (chatTab) chatTab.classList.add('active');
+      const chatPane = g('ai-pane-chat'); if (chatPane) chatPane.classList.remove('hidden');
+    }
+  }
+
+  // Focus timer widget
+  if (flags.focus && !g('bonus-focus-widget')) bonusMountFocusTimer();
+  if (!flags.focus) { const w = g('bonus-focus-widget'); if (w) w.remove(); clearInterval(bonusFocusInterval); bonusFocusInterval = null; }
+
+  // Daily streak tracker
+  if (flags.streak) bonusUpdateStreak();
+  if (!flags.streak) { const b = g('bonus-streak-badge'); if (b) b.remove(); }
+
+  // Quick-export button floats near the FAB if unlocked
+  if (flags.quickexport && !g('bonus-quickexport-btn')) {
+    const btn = document.createElement('button');
+    btn.id = 'bonus-quickexport-btn';
+    btn.className = 'bonus-floating-card bonus-ripple';
+    btn.style.cssText = 'right:90px;left:auto;bottom:22px;width:auto;padding:10px 14px;cursor:pointer;font-size:12px;font-weight:600;border:1px solid var(--bor)';
+    btn.textContent = '📦 Export data';
+    btn.onclick = bonusExportData;
+    document.body.appendChild(btn);
+  }
+  if (!flags.quickexport) { const b = g('bonus-quickexport-btn'); if (b) b.remove(); }
+
+  // Quick-nav mini command bar
+  if (flags.quicknav && !g('bonus-quicknav-bar')) bonusMountQuickNav();
+  if (!flags.quicknav) { const bar = g('bonus-quicknav-bar'); if (bar) bar.remove(); }
+}
+
+async function runAiExtraTool(tool){
+  const outEl = g('ai-' + tool + '-output');
+  const btn = event && event.target;
+  if (tool === 'translate') {
+    const text = g('ai-translate-input').value.trim();
+    if (!text) { outEl.style.display='block'; outEl.textContent='Please enter text first.'; return; }
+    if (btn) btn.disabled = true;
+    outEl.style.display = 'block'; outEl.textContent = 'Translating…';
+    try {
+      const { translated } = await aiPost('/api/translate', { text, targetLanguage: g('ai-translate-lang').value });
+      outEl.textContent = translated;
+    } catch (err) { outEl.textContent = '⚠️ ' + err.message; }
+    finally { if (btn) btn.disabled = false; }
+  } else if (tool === 'brainstorm') {
+    const topic = g('ai-brainstorm-input').value.trim();
+    const wrap = g('ai-brainstorm-output');
+    if (!topic) { wrap.textContent = 'Please enter a topic first.'; return; }
+    if (btn) btn.disabled = true;
+    wrap.innerHTML = '<div class="ai-tool-output">Brainstorming…</div>';
+    try {
+      const { ideas } = await aiPost('/api/brainstorm', { topic });
+      wrap.innerHTML = '';
+      (ideas || []).forEach((idea, i) => {
+        const div = document.createElement('div');
+        div.className = 'ai-tool-output bonus-card-hover';
+        div.style.animationDelay = (i * 0.03) + 's';
+        div.textContent = '💡 ' + idea;
+        wrap.appendChild(div);
+      });
+    } catch (err) { wrap.innerHTML = '<div class="ai-tool-output">⚠️ ' + err.message + '</div>'; }
+    finally { if (btn) btn.disabled = false; }
+  } else if (tool === 'citation') {
+    const source = g('ai-citation-input').value.trim();
+    if (!source) { outEl.style.display='block'; outEl.textContent='Please paste source info first.'; return; }
+    if (btn) btn.disabled = true;
+    outEl.style.display = 'block'; outEl.textContent = 'Generating…';
+    try {
+      const { citation } = await aiPost('/api/citation', { source, style: g('ai-citation-style').value });
+      outEl.textContent = citation;
+    } catch (err) { outEl.textContent = '⚠️ ' + err.message; }
+    finally { if (btn) btn.disabled = false; }
+  }
+}
+
+function bonusMountFocusTimer(){
+  const div = document.createElement('div');
+  div.id = 'bonus-focus-widget';
+  div.className = 'bonus-floating-card';
+  div.style.cssText = 'right:20px;left:auto;bottom:160px;padding:12px 14px;width:180px';
+  div.innerHTML = `
+    <div style="font-weight:700;font-size:12px;margin-bottom:6px">⏱️ Focus Timer</div>
+    <div id="bonus-focus-display" style="font-size:22px;font-weight:800;text-align:center;margin:6px 0">25:00</div>
+    <div style="display:flex;gap:6px">
+      <button class="bonus-ripple" onclick="bonusFocusToggle()" id="bonus-focus-btn" style="flex:1;border:1px solid var(--bor);background:var(--ac);color:var(--on-ac,#fff);border-radius:8px;padding:6px;font-size:11px;cursor:pointer">Start</button>
+      <button class="bonus-ripple" onclick="bonusFocusReset()" style="border:1px solid var(--bor);background:var(--bg);border-radius:8px;padding:6px 9px;font-size:11px;cursor:pointer">↺</button>
+    </div>`;
+  document.body.appendChild(div);
+}
+let bonusFocusInterval = null, bonusFocusSeconds = 25 * 60;
+function bonusFocusToggle(){
+  const btn = g('bonus-focus-btn');
+  if (bonusFocusInterval) {
+    clearInterval(bonusFocusInterval); bonusFocusInterval = null;
+    if (btn) btn.textContent = 'Start';
+  } else {
+    bonusFocusInterval = setInterval(() => {
+      bonusFocusSeconds = Math.max(0, bonusFocusSeconds - 1);
+      const m = String(Math.floor(bonusFocusSeconds / 60)).padStart(2, '0');
+      const s = String(bonusFocusSeconds % 60).padStart(2, '0');
+      const disp = g('bonus-focus-display'); if (disp) disp.textContent = m + ':' + s;
+      if (bonusFocusSeconds === 0) {
+        clearInterval(bonusFocusInterval); bonusFocusInterval = null;
+        if (btn) btn.textContent = 'Start';
+        if (typeof toast === 'function') toast('⏱️ Focus session complete!');
+      }
+    }, 1000);
+    if (btn) btn.textContent = 'Pause';
+  }
+}
+function bonusFocusReset(){
+  clearInterval(bonusFocusInterval); bonusFocusInterval = null;
+  bonusFocusSeconds = 25 * 60;
+  const disp = g('bonus-focus-display'); if (disp) disp.textContent = '25:00';
+  const btn = g('bonus-focus-btn'); if (btn) btn.textContent = 'Start';
+}
+
+function bonusUpdateStreak(){
+  const today = new Date().toISOString().slice(0, 10);
+  let data;
+  try { data = JSON.parse(localStorage.getItem('scholr_streak') || '{}'); } catch (_) { data = {}; }
+  if (data.lastDate !== today) {
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    data.count = (data.lastDate === yesterday) ? (data.count || 0) + 1 : 1;
+    data.lastDate = today;
+    localStorage.setItem('scholr_streak', JSON.stringify(data));
+  }
+  let badge = g('bonus-streak-badge');
+  if (!badge) {
+    badge = document.createElement('div');
+    badge.id = 'bonus-streak-badge';
+    badge.style.cssText = 'position:fixed;top:14px;right:14px;z-index:7000;background:var(--sur);border:1px solid var(--bor);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;box-shadow:var(--sh2);animation:bonusPop .3s ease both';
+    document.body.appendChild(badge);
+  }
+  badge.textContent = '🔥 ' + (data.count || 1) + ' day streak';
+}
+
+function bonusMountQuickNav(){
+  if (typeof PG === 'undefined') return;
+  const bar = document.createElement('div');
+  bar.id = 'bonus-quicknav-bar';
+  bar.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);top:14px;z-index:7000;display:flex;gap:4px;background:var(--sur);border:1px solid var(--bor);border-radius:12px;padding:4px;box-shadow:var(--sh2);flex-wrap:wrap;max-width:90vw;animation:bonusPop .3s ease both';
+  Object.keys(PG).slice(0, 8).forEach(id => {
+    const btn = document.createElement('button');
+    btn.className = 'bonus-ripple';
+    btn.style.cssText = 'border:none;background:transparent;color:var(--ink3);border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer;transition:all .15s';
+    btn.textContent = PG[id];
+    btn.onclick = () => go(id);
+    btn.onmouseenter = () => btn.style.background = 'var(--s2)';
+    btn.onmouseleave = () => btn.style.background = 'transparent';
+    bar.appendChild(btn);
+  });
+  document.body.appendChild(bar);
+}
+
+// Auto-speak hook: if enabled, read bot replies aloud automatically once streaming finishes.
+const _bonusOrigAddSpeaker = typeof aiAddSpeakerButton === 'function' ? aiAddSpeakerButton : null;
+function bonusMaybeAutoSpeak(fullReply){
+  const flags = bonusGetUnlocked();
+  if (flags.autospeak && fullReply && typeof aiSpeak === 'function') aiSpeak(fullReply);
+}
+
+// Ripple effect for any element with .bonus-ripple
+document.addEventListener('click', (e) => {
+  const el = e.target.closest && e.target.closest('.bonus-ripple');
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  const fx = document.createElement('span');
+  const size = Math.max(rect.width, rect.height);
+  fx.className = 'bonus-ripple-fx';
+  fx.style.width = fx.style.height = size + 'px';
+  fx.style.left = (e.clientX - rect.left - size / 2) + 'px';
+  fx.style.top = (e.clientY - rect.top - size / 2) + 'px';
+  el.appendChild(fx);
+  setTimeout(() => fx.remove(), 500);
+});
+
+const BONUS_HTML = `
+<div class="bonus-codes-wrap">
+  <div class="bonus-codes-title">🎁 Bonus Codes</div>
+  <div style="font-size:11px;color:var(--ink4)">Have a code? Redeem it here to unlock extra features.</div>
+  <div class="bonus-codes-row">
+    <input id="bonus-code-input" type="text" placeholder="ENTER CODE" maxlength="24" onkeydown="if(event.key==='Enter')bonusRedeemCode()"/>
+    <button class="bonus-ripple" onclick="bonusRedeemCode()">Redeem</button>
+  </div>
+  <div class="bonus-codes-row">
+    <button class="bonus-ripple" style="flex:1;background:var(--s2);color:var(--ink3);border:1px solid var(--bor)" onclick="bonusResetLastCode()">↺ Reset previous code</button>
+    <button class="bonus-ripple" style="flex:1;background:var(--s2);color:#dc2626;border:1px solid #dc2626" onclick="bonusResetAll()">⚠️ Reset ALL to default</button>
+  </div>
+  <div id="bonus-code-msg" class="bonus-codes-msg"></div>
+  <div id="bonus-unlocked-list" class="bonus-unlocked-list"></div>
+  <div id="bonus-admin-slot"></div>
+</div>`;
+
+function bonusEnsureDefault(){
+  const flags = bonusGetUnlocked();
+  if (!flags.starter) {
+    flags.starter = true;
+    BONUS_STARTER_FLAGS.forEach(f => flags[f] = true);
+    bonusSetUnlocked(flags);
+  }
+}
+
+function bonusInit(){
+  bonusEnsureDefault();
+  const styleTag = document.createElement('style');
+  styleTag.id = 'bonus-styles';
+  styleTag.textContent = BONUS_CSS;
+  document.head.appendChild(styleTag);
+
+  // Try to attach inside an existing Settings panel; otherwise float it.
+  const settingsContainer =
+    document.querySelector('#settings, .settings, [id*="settings" i], [class*="settings" i]');
+
+  if (settingsContainer) {
+    const section = document.createElement('div');
+    section.id = 'bonus-codes-section';
+    section.innerHTML = BONUS_HTML;
+    settingsContainer.appendChild(section);
+  } else {
+    const details = document.createElement('details');
+    details.className = 'bonus-floating-card';
+    details.innerHTML = `<summary>🎁 Bonus Codes</summary>${BONUS_HTML}`;
+    document.body.appendChild(details);
+  }
+
+  bonusApplyEffects(bonusGetUnlocked());
+  bonusRenderUnlocked();
+}
+
+
+document.addEventListener('DOMContentLoaded', bonusInit);
+if (document.readyState !== 'loading') bonusInit();
+
+
+
+/* ---------- Speech: text-to-speech + voice input (native browser APIs, fast & free) ---------- */
+function aiSpeak(text){
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 1.05; u.pitch = 1;
+  window.speechSynthesis.speak(u);
+}
+function aiStopSpeak(){ if (window.speechSynthesis) window.speechSynthesis.cancel(); }
+
+function aiVoiceInput(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert('Voice input is not supported in this browser.'); return; }
+  const rec = new SR();
+  rec.lang = 'en-US'; rec.interimResults = false; rec.maxAlternatives = 1;
+  const micBtn = g('ai-mic-btn');
+  if (micBtn) micBtn.classList.add('ai-mic-listening');
+  rec.onresult = (e) => {
+    const text = e.results[0][0].transcript;
+    const inp = g('ai-chat-input');
+    if (inp) { inp.value = text; inp.focus(); }
+  };
+  rec.onerror = () => { if (micBtn) micBtn.classList.remove('ai-mic-listening'); };
+  rec.onend = () => { if (micBtn) micBtn.classList.remove('ai-mic-listening'); };
+  rec.start();
+}
+
+/* Add a speaker icon to each bot chat message after it finishes streaming */
+function aiAddSpeakerButton(botEl, fullReply){
+  if (!fullReply || !fullReply.trim()) return;
+  const btn = document.createElement('button');
+  btn.className = 'ai-speak-btn';
+  btn.title = 'Read aloud';
+  btn.textContent = '🔊';
+  btn.onclick = (e) => { e.stopPropagation(); aiSpeak(fullReply); };
+  botEl.appendChild(btn);
+}
+
+/* ---------- Announcements banner (dashboard) ---------- */
+const SCHOLR_ANNOUNCEMENTS = [
+  { id: 'a1', text: '🎉 New: AI Tools panel — essays, notes, quizzes, flashcards & more.', date: '2026-08-20' },
+  { id: 'a2', text: '⚡ AI chat now streams responses live and renders math with MathJax.', date: '2026-08-20' },
+  { id: 'a3', text: '🎁 Try a bonus code in Settings — STR2030 unlocks starter themes.', date: '2026-08-20' },
+];
+
+function announceInit(){
+  const seen = JSON.parse(localStorage.getItem('scholr_announce_seen') || '{}');
+  const unseen = SCHOLR_ANNOUNCEMENTS.filter(a => !seen[a.id]);
+  if (!unseen.length) return;
+
+  const style = document.createElement('style');
+  style.textContent = `
+    .ai-speak-btn{border:none;background:transparent;cursor:pointer;font-size:12px;margin-left:6px;opacity:.7;transition:opacity .15s}
+    .ai-speak-btn:hover{opacity:1}
+    .ai-mic-btn{border:1px solid var(--bor);background:var(--bg);border-radius:9px;padding:8px 10px;cursor:pointer;font-size:13px;transition:all .15s}
+    .ai-mic-listening{background:#dc2626 !important;color:#fff;animation:aiMicPulse 1s infinite}
+    @keyframes aiMicPulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.5)}50%{box-shadow:0 0 0 8px rgba(220,38,38,0)}}
+    .scholr-announce-bar{
+      position:fixed;top:0;left:0;right:0;z-index:9500;background:linear-gradient(90deg,var(--ac),var(--ac2));
+      color:#fff;padding:9px 16px;font-size:12.5px;display:flex;align-items:center;justify-content:center;gap:14px;
+      animation:announceSlideDown .3s ease both;box-shadow:0 2px 10px rgba(0,0,0,.15);
+    }
+    @keyframes announceSlideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+    .scholr-announce-bar button{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:6px;padding:3px 9px;cursor:pointer;font-size:11px}
+    .scholr-announce-bar button:hover{background:rgba(255,255,255,.32)}
+  `;
+  document.head.appendChild(style);
+
+  let idx = 0;
+  const bar = document.createElement('div');
+  bar.className = 'scholr-announce-bar';
+  bar.innerHTML = `<span id="scholr-announce-text">${unseen[0].text}</span><button id="scholr-announce-dismiss">Dismiss</button>`;
+  document.body.prepend(bar);
+
+  g('scholr-announce-dismiss').onclick = () => {
+    seen[unseen[idx].id] = true;
+    localStorage.setItem('scholr_announce_seen', JSON.stringify(seen));
+    idx++;
+    if (idx < unseen.length) {
+      g('scholr-announce-text').textContent = unseen[idx].text;
+    } else {
+      bar.remove();
+    }
+  };
+}
+document.addEventListener('DOMContentLoaded', announceInit);
+if (document.readyState !== 'loading') announceInit();
+
 </script>
 </body>
 </html>
