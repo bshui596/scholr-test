@@ -7312,14 +7312,17 @@ function pomStart(fromFocus) {
   const fb = g('focus-toggle'); if (fb) fb.textContent = '⏸ Pause';
   pomState.timer = setInterval(() => {
     pomState.secondsLeft--;
-    pomUpdateDisplay();
     if (pomState.secondsLeft <= 0) {
-      // Stop ticking immediately, but wait a beat before switching modes —
-      // otherwise the browser never gets a chance to paint the ring at
-      // 00:00/fully-closed before pomComplete() resets it for the next
-      // phase, so the ring visually appears to skip closing entirely.
+      // Snap the ring straight to fully-closed (no animation) in the same
+      // frame we play the chime, so the two are always exactly in sync —
+      // not dependent on a 1s CSS transition finishing on time.
+      pomUpdateDisplay(true);
+      playChime();
+      pomState._chimed = true;
       clearInterval(pomState.timer);
-      setTimeout(pomComplete, 450);
+      setTimeout(pomComplete, 700); // brief pause so the closed ring is visible before switching modes
+    } else {
+      pomUpdateDisplay();
     }
   }, 1000);
 }
@@ -7368,7 +7371,11 @@ function playChime() {
 }
 function pomComplete() {
   pomStop();
-  playChime();
+  // Only chime here for manual skips (pomSkip calls this directly). The
+  // natural end-of-timer path already played it immediately in pomStart's
+  // interval, ahead of the ring-closing delay — don't double it up.
+  if (!pomState._chimed) playChime();
+  pomState._chimed = false;
   if (pomState.mode === 'focus') {
     DB.pomodoro.todayCount = (DB.pomodoro.todayCount||0) + 1;
     DB.pomodoro.totalMinutes = (DB.pomodoro.totalMinutes||0) + (DB.pomodoro.focus||25);
@@ -7389,7 +7396,7 @@ function pomComplete() {
   pomUpdateStats();
   if (DB.pomodoro.auto) setTimeout(() => pomStart(), 1500);
 }
-function pomUpdateDisplay() {
+function pomUpdateDisplay(snap) {
   const m = Math.floor(pomState.secondsLeft/60), s = pomState.secondsLeft%60;
   const txt = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
   const el = g('pom-display'); if (el) el.textContent = txt;
@@ -7399,9 +7406,24 @@ function pomUpdateDisplay() {
   const total = { focus: DB.pomodoro.focus||25, short: DB.pomodoro.short||5, long: DB.pomodoro.long||15 }[pomState.mode] * 60;
   const pct = pomState.secondsLeft / total;
   const circ = 603.2;
-  const c = g('pom-circle'); if (c) c.setAttribute('stroke-dashoffset', circ * pct);
-  const fc = g('focus-ring'); if (fc) fc.setAttribute('stroke-dashoffset', circ * pct);
+  const c = g('pom-circle'), fc = g('focus-ring');
+  // pom-circle and focus-ring animate via a 1s CSS transition on normal
+  // ticks (a nice smooth sweep) — but that means their "closed" position
+  // is only reached ~1s *after* we set the attribute, and that timing can
+  // drift against setInterval/tick jitter. When snap=true (the tick that
+  // hits 00:00), we briefly disable the transition so the ring lands at
+  // fully-closed in the exact same frame as the chime and the readout,
+  // then restore the normal transition for future ticks.
+  const ringEls = [c, fc].filter(Boolean);
+  let origT = [];
+  if (snap) { origT = ringEls.map(x => x.style.transition); ringEls.forEach(x => x.style.transition = 'none'); }
+  if (c) c.setAttribute('stroke-dashoffset', circ * pct);
+  if (fc) fc.setAttribute('stroke-dashoffset', circ * pct);
   const dc = g('d-pom-circle'); if (dc) { const c2=213.6; dc.setAttribute('stroke-dashoffset', c2 * pct); }
+  if (snap) {
+    ringEls.forEach(x => x.getBoundingClientRect()); // force reflow so 'none' actually takes effect
+    requestAnimationFrame(() => ringEls.forEach((x,i) => { x.style.transition = origT[i]; }));
+  }
 }
 function pomRenderDots() {
   const total = pomState.totalSessions;
