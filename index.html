@@ -950,9 +950,9 @@ img{max-width:100%}
 .gb-add:hover{background:var(--acll)}
 
 /* ══════════════════════ TOAST ══════════════════════ */
-.toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:12.5px;font-weight:600;z-index:9999;opacity:0;transform:translateY(8px);transition:all .15s cubic-bezier(.34,1.4,.64,1);pointer-events:none;box-shadow:var(--sh3);will-change:transform,opacity}
+.toast{position:fixed;bottom:24px;right:24px;background:rgba(20,20,24,.94);color:#fff;padding:10px 16px;border-radius:10px;font-size:12.5px;font-weight:600;z-index:9999;opacity:0;transform:translateY(8px);transition:all .15s cubic-bezier(.34,1.4,.64,1);pointer-events:none;box-shadow:var(--sh3);will-change:transform,opacity;border:1px solid rgba(255,255,255,.08)}
 .toast.on{opacity:1;transform:none;transition:all .15s cubic-bezier(.34,1.4,.64,1)}
-.save-banner{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--ink);color:#fff;padding:8px 18px;border-radius:99px;font-size:12px;font-weight:600;z-index:500;transition:transform .3s,opacity .3s;opacity:0;pointer-events:none;display:flex;align-items:center;gap:6px;box-shadow:var(--sh2);white-space:nowrap}
+.save-banner{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(70px);background:rgba(20,20,24,.94);color:#fff;padding:8px 18px;border-radius:99px;font-size:12px;font-weight:600;z-index:500;transition:transform .3s,opacity .3s;opacity:0;pointer-events:none;display:flex;align-items:center;gap:6px;box-shadow:var(--sh2);white-space:nowrap;border:1px solid rgba(255,255,255,.08)}
 .save-banner.on{transform:translateX(-50%) translateY(0);opacity:1}
 
 /* ══════════════════════ MODAL BASE ══════════════════════ */
@@ -1851,9 +1851,14 @@ document.addEventListener('DOMContentLoaded',function(){
                 <div><label class="fl">Sessions until long break</label><input class="fi" type="number" id="pom-set-sessions" value="4" min="1" max="10" onchange="pomApplySettings()"/></div>
                 <div><label class="fl">Auto-start breaks</label>
                   <select class="fsel" id="pom-auto" onchange="pomApplySettings()">
-                    <option value="0">Manual</option><option value="1">Auto-start</option>
+                    <option value="1" selected>Auto-start</option><option value="0">Manual</option>
                   </select>
                 </div>
+              </div>
+              <div style="margin-top:12px"><label class="fl">Alarm sound</label>
+                <select class="fsel" id="pom-alarm" onchange="pomApplySettings()">
+                  <option value="1" selected>On — gentle chime</option><option value="0">Off</option>
+                </select>
               </div>
               <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--bor);display:flex;gap:16px;font-size:12px;color:var(--ink4)">
                 <span>Today: <strong id="pom-today-count" style="color:var(--ink)">0</strong> sessions</span>
@@ -2171,7 +2176,8 @@ document.addEventListener('DOMContentLoaded',function(){
               <div class="set-row"><label>Short break<small>Break between sessions</small></label><select class="fsel" style="width:140px" id="st-short" onchange="DB.pomodoro.short=+this.value;save()"><option value="3">3 min</option><option value="5" selected>5 min</option><option value="10">10 min</option><option value="15">15 min</option></select></div>
               <div class="set-row"><label>Long break<small>Break after completing all sessions</small></label><select class="fsel" style="width:140px" id="st-long" onchange="DB.pomodoro.long=+this.value;save()"><option value="10">10 min</option><option value="15" selected>15 min</option><option value="20">20 min</option><option value="30">30 min</option></select></div>
               <div class="set-row"><label>Sessions per cycle<small>How many focus sessions before long break</small></label><select class="fsel" style="width:140px" id="st-sess" onchange="DB.pomodoro.sessions=+this.value;pomState.totalSessions=+this.value;save();pomRenderDots()"><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option><option value="5">5</option><option value="6">6</option></select></div>
-              <div class="set-row"><label>Auto-start next<small>Automatically begin breaks and sessions</small></label><select class="fsel" style="width:140px" id="st-auto" onchange="DB.pomodoro.auto=+this.value;save()"><option value="0" selected>Manual</option><option value="1">Auto-start all</option></select></div>
+              <div class="set-row"><label>Auto-start next<small>Automatically begin breaks and sessions</small></label><select class="fsel" style="width:140px" id="st-auto" onchange="DB.pomodoro.auto=+this.value;save();pomSyncSettingsUI()"><option value="1" selected>Auto-start all</option><option value="0">Manual</option></select></div>
+              <div class="set-row"><label>Alarm sound<small>Play a gentle chime when a session or break ends</small></label><select class="fsel" style="width:140px" id="st-alarm" onchange="DB.pomodoro.alarm=+this.value;save();pomSyncSettingsUI()"><option value="1" selected>On</option><option value="0">Off</option></select></div>
             </div>
             <div class="set-sec"><h3>🖩 Calculator</h3>
               <div class="set-row"><label>Default mode<small>Which mode opens first</small></label><select class="fsel" style="width:140px" onchange="DB.p.calcMode=this.value;save()"><option value="basic">Basic</option><option value="sci">Scientific</option></select></div>
@@ -3728,6 +3734,7 @@ function renderSettings() {
   // Slots
   const sl = g('s-slots');
   if (sl) { sl.innerHTML=''; (DB.slots||[]).forEach(s => addSlotRow(sl, s)); }
+  pomSyncSettingsUI();
 }
 function pickTheme(el, id) {
   document.querySelectorAll('.theme-sw').forEach(s => s.classList.remove('on'));
@@ -3918,7 +3925,7 @@ function go(id) {
   if (id==='gpa') { renderGPA(); renderGPAScaleRef(); }
   if (id==='flashcards') fcRenderDecks();
   if (id==='exams') examRender();
-  if (id==='pomodoro') { pomRenderDots(); pomUpdateDisplay(); pomUpdateStats(); }
+  if (id==='pomodoro') { pomRenderDots(); pomUpdateDisplay(); pomUpdateStats(); pomSyncSettingsUI(); }
   if (id==='converter') setTimeout(()=>convCat('length', document.querySelector('[data-cat="length"]')),0);
   if (id==='ibpoints') ibRenderSubjects();
   if (id==='cas') casRender();
@@ -7280,7 +7287,8 @@ document.addEventListener('keydown', e => {
 /* ═══════════════════════════════════════════════════
    POMODORO MODULE (full)
 ═══════════════════════════════════════════════════ */
-if (!DB.pomodoro) DB.pomodoro = { focus:25, short:5, long:15, sessions:4, auto:0, todayCount:0, totalMinutes:0, lastDate: '' };
+if (!DB.pomodoro) DB.pomodoro = { focus:25, short:5, long:15, sessions:4, auto:1, alarm:1, todayCount:0, totalMinutes:0, lastDate: '' };
+if (DB.pomodoro.alarm === undefined) DB.pomodoro.alarm = 1;
 let pomState = { mode:'focus', running:false, timer:null, secondsLeft: (DB.pomodoro.focus||25)*60, currentSession:1, totalSessions: DB.pomodoro.sessions||4, flipped:false, focusOpen:false };
 
 function pomSetMode(m, btn) {
@@ -7305,7 +7313,14 @@ function pomStart(fromFocus) {
   pomState.timer = setInterval(() => {
     pomState.secondsLeft--;
     pomUpdateDisplay();
-    if (pomState.secondsLeft <= 0) pomComplete();
+    if (pomState.secondsLeft <= 0) {
+      // Stop ticking immediately, but wait a beat before switching modes —
+      // otherwise the browser never gets a chance to paint the ring at
+      // 00:00/fully-closed before pomComplete() resets it for the next
+      // phase, so the ring visually appears to skip closing entirely.
+      clearInterval(pomState.timer);
+      setTimeout(pomComplete, 450);
+    }
   }, 1000);
 }
 function pomStop() {
@@ -7324,8 +7339,36 @@ function pomSkip() {
   pomStop();
   pomComplete();
 }
+/* Gentle two-note chime (no harsh attack) played when a focus session or
+   break ends. Built the same way as the ambient sounds above: a couple of
+   oscillators with a soft volume envelope and a lowpass filter so it fades
+   in/out instead of clicking on. Respects DB.pomodoro.alarm. */
+function playChime() {
+  if (DB.pomodoro.alarm === 0) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const notes = [659.25, 987.77]; // E5 then B5 — soft, unobtrusive interval
+    notes.forEach((freq, i) => {
+      const start = ctx.currentTime + i * 0.42;
+      const dur = 1.1;
+      const o = ctx.createOscillator();
+      o.type = 'sine';
+      o.frequency.value = freq;
+      const filt = ctx.createBiquadFilter();
+      filt.type = 'lowpass'; filt.frequency.value = 2200;
+      const g2 = ctx.createGain();
+      g2.gain.setValueAtTime(0, start);
+      g2.gain.linearRampToValueAtTime(0.16, start + 0.18); // slow fade-in, not sudden
+      g2.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+      o.connect(filt); filt.connect(g2); g2.connect(ctx.destination);
+      o.start(start); o.stop(start + dur + 0.05);
+    });
+    setTimeout(() => { try { ctx.close(); } catch(e) {} }, (notes.length * 0.42 + 1.3) * 1000);
+  } catch(e) { /* Web Audio not supported — silently skip, toast still shows */ }
+}
 function pomComplete() {
   pomStop();
+  playChime();
   if (pomState.mode === 'focus') {
     DB.pomodoro.todayCount = (DB.pomodoro.todayCount||0) + 1;
     DB.pomodoro.totalMinutes = (DB.pomodoro.totalMinutes||0) + (DB.pomodoro.focus||25);
@@ -7371,9 +7414,22 @@ function pomApplySettings() {
   DB.pomodoro.short = +g('pom-set-short')?.value||5;
   DB.pomodoro.long = +g('pom-set-long')?.value||15;
   DB.pomodoro.sessions = +g('pom-set-sessions')?.value||4;
-  DB.pomodoro.auto = +g('pom-auto')?.value||0;
+  DB.pomodoro.auto = +(g('pom-auto')?.value ?? 1);
+  DB.pomodoro.alarm = +(g('pom-alarm')?.value ?? 1);
   pomState.totalSessions = DB.pomodoro.sessions;
-  save(); pomReset(); pomRenderDots();
+  save(); pomReset(); pomRenderDots(); pomSyncSettingsUI();
+}
+/* Keeps every pomodoro-related control (on the timer page AND the settings
+   page) showing whatever is actually saved in DB.pomodoro, since the two
+   pages have separate inputs for the same values. */
+function pomSyncSettingsUI() {
+  const p = DB.pomodoro;
+  setValue('pom-set-focus', p.focus); setValue('pom-set-short', p.short);
+  setValue('pom-set-long', p.long); setValue('pom-set-sessions', p.sessions);
+  setSel('pom-auto', p.auto ? '1' : '0'); setSel('pom-alarm', p.alarm===0 ? '0' : '1');
+  setSel('st-focus', String(p.focus)); setSel('st-short', String(p.short));
+  setSel('st-long', String(p.long)); setSel('st-sess', String(p.sessions));
+  setSel('st-auto', p.auto ? '1' : '0'); setSel('st-alarm', p.alarm===0 ? '0' : '1');
 }
 function pomUpdateStats() {
   const tc = g('pom-today-count'); if (tc) tc.textContent = DB.pomodoro.todayCount||0;
@@ -7390,7 +7446,12 @@ function toggleFocus() {
   if (!ov) return;
   pomState.focusOpen = !pomState.focusOpen;
   ov.style.display = pomState.focusOpen ? 'flex' : 'none';
-  if (pomState.focusOpen) { pomRenderDots(); pomUpdateDisplay(); }
+  if (pomState.focusOpen) {
+    pomRenderDots(); pomUpdateDisplay();
+    // Auto-start the timer the moment Focus Mode opens (unless it's already
+    // running, or the user has switched Auto-start to Manual in settings).
+    if (!pomState.running && DB.pomodoro.auto) pomStart(true);
+  }
   else {
     stopAmbient(); // leaving focus mode: kill any playing ambient sound
     if (pomState.running) pomStop(); // ...and stop the session timer itself, not just hide it
