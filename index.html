@@ -1801,6 +1801,77 @@ document.addEventListener('DOMContentLoaded',function(){
           <div id="exam-list"></div>
         </div>
 
+        <!-- ANALYTICS -->
+        <div class="pg" id="pg-analytics">
+          <div class="row-hd" style="margin-bottom:14px">
+            <div>
+              <div style="font-family:var(--font-h);font-size:20px;font-weight:600">🧠 Analytics</div>
+              <p style="color:var(--ink4);font-size:12px;margin-top:2px">Your study habits, grades and progress, all in one place.</p>
+            </div>
+            <div class="pill-row" id="an-range-pills" style="display:flex;gap:6px">
+              <div class="pill on" data-r="7" onclick="anSetRange(7)">7 days</div>
+              <div class="pill" data-r="30" onclick="anSetRange(30)">30 days</div>
+            </div>
+          </div>
+
+          <div class="stat-grid">
+            <div class="stat"><div class="stat-lbl">Study time</div><div class="stat-val" id="an-st-week">0h 0m</div><div class="stat-sub">this week</div><div class="stat-bar"><div class="stat-fill" id="an-sf-week" style="background:var(--ac)"></div></div></div>
+            <div class="stat"><div class="stat-lbl">Study time</div><div class="stat-val" id="an-st-month">0h 0m</div><div class="stat-sub">this month</div><div class="stat-bar"><div class="stat-fill" id="an-sf-month" style="background:var(--ac2)"></div></div></div>
+            <div class="stat"><div class="stat-lbl">Homework</div><div class="stat-val" id="an-st-hwrate">0%</div><div class="stat-sub">completion rate</div><div class="stat-bar"><div class="stat-fill" id="an-sf-hwrate" style="background:var(--blu)"></div></div></div>
+            <div class="stat"><div class="stat-lbl">On-time rate</div><div class="stat-val" id="an-st-ontime">—</div><div class="stat-sub" id="an-st-ontime-sub">of completed work</div><div class="stat-bar"><div class="stat-fill" id="an-sf-ontime" style="background:var(--amb)"></div></div></div>
+          </div>
+
+          <div class="d-grid" style="margin-bottom:16px">
+            <div>
+              <div class="row-hd"><div class="sec-lbl">Study Time</div></div>
+              <div class="card" style="height:230px"><canvas id="an-study-chart"></canvas></div>
+            </div>
+            <div>
+              <div class="row-hd"><div class="sec-lbl">This Week vs Last Week</div></div>
+              <div class="card" id="an-weekcompare"></div>
+            </div>
+          </div>
+
+          <div class="d-grid" style="margin-bottom:16px">
+            <div>
+              <div class="row-hd"><div class="sec-lbl">Homework Completion</div></div>
+              <div class="card" style="height:230px;display:flex;align-items:center;gap:14px">
+                <div style="width:130px;height:130px;flex-shrink:0"><canvas id="an-hw-donut"></canvas></div>
+                <div id="an-hw-legend" style="flex:1;font-size:12px"></div>
+              </div>
+            </div>
+            <div>
+              <div class="row-hd"><div class="sec-lbl">On-Time vs Late</div></div>
+              <div class="card" style="height:230px;display:flex;align-items:center;gap:14px">
+                <div style="width:130px;height:130px;flex-shrink:0"><canvas id="an-ontime-donut"></canvas></div>
+                <div id="an-ontime-legend" style="flex:1;font-size:12px"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-grid" style="margin-bottom:16px">
+            <div>
+              <div class="row-hd"><div class="sec-lbl">Grade Trend</div></div>
+              <div class="card" style="height:250px" id="an-grade-card"><canvas id="an-grade-chart"></canvas></div>
+            </div>
+            <div>
+              <div class="row-hd"><div class="sec-lbl">Most / Least Studied Subjects</div></div>
+              <div class="card" style="height:250px" id="an-subject-card"><canvas id="an-subject-chart"></canvas></div>
+            </div>
+          </div>
+
+          <div class="d-grid">
+            <div>
+              <div class="row-hd"><div class="sec-lbl">Flashcard Performance</div></div>
+              <div class="card" id="an-fc-card"></div>
+            </div>
+            <div>
+              <div class="row-hd"><div class="sec-lbl">Exam Preparation Progress</div></div>
+              <div class="card" id="an-exam-card"></div>
+            </div>
+          </div>
+        </div>
+
         <!-- POMODORO PAGE -->
         <div class="pg" id="pg-pomodoro">
           <div style="max-width:520px;margin:0 auto">
@@ -3776,7 +3847,7 @@ function saveSlots() {
 }
 
 /* ── NAVIGATION ── */
-const PG = {dashboard:'Dashboard',homework:'Homework',notes:'Notes',checklist:'Checklist',drive:'My Drive',timetable:'Timetable',dayplan:'Day Plan',planday:'Plan My Day',planner:'Weekly Planner',calendar:'Calendar',grades:'Grade Book',goals:'Grade Goals',rubric:'Rubric',settings:'Settings',data:'Import & Export',exams:'Exam Planner'};
+const PG = {dashboard:'Dashboard',homework:'Homework',notes:'Notes',checklist:'Checklist',drive:'My Drive',timetable:'Timetable',dayplan:'Day Plan',planday:'Plan My Day',planner:'Weekly Planner',calendar:'Calendar',grades:'Grade Book',goals:'Grade Goals',rubric:'Rubric',settings:'Settings',data:'Import & Export',exams:'Exam Planner',analytics:'Analytics'};
 let curPg = 'dashboard';
 
 /* ── CUSTOMIZABLE SIDEBAR ── */
@@ -3797,6 +3868,7 @@ const SIDEBAR_ITEMS = [
   {id:'flashcards', ic:'🃏', label:'Flashcards', sec:'Academics', pg:'flashcards'},
   {id:'exams', ic:'⏳', label:'Exam Planner', sec:'Academics', pg:'exams'},
   {id:'rubric', ic:'🧾', label:'Rubric', sec:'Academics', pg:'rubric'},
+  {id:'analytics', ic:'🧠', label:'Analytics', sec:'Academics', pg:'analytics'},
   {id:'ibpoints', ic:'🎓', label:'IB Points', sec:'IB Diploma', pg:'ibpoints'},
   {id:'cas', ic:'🌱', label:'CAS Tracker', sec:'IB Diploma', pg:'cas'},
   {id:'calc', ic:'🖩', label:'Calculator', sec:'Tools', action:'toggleCalc()'},
@@ -3920,7 +3992,6 @@ function go(id) {
   if (id==='goals') renderGoals();
   if (id==='checklist') renderChecklist();
   if (id==='rubric') renderRubric();
-  if (id==='calendar') renderCalendar();
   if (id==='settings') { renderSettings(); sTab('profile'); }
   if (id==='gpa') { renderGPA(); renderGPAScaleRef(); }
   if (id==='flashcards') fcRenderDecks();
@@ -3931,6 +4002,7 @@ function go(id) {
   if (id==='cas') casRender();
   if (id==='admin') renderAdmin();
   if (id==='data') renderDataPage();
+  if (id==='analytics') renderAnalytics();
 }
 
 /* ── DASHBOARD ── */
@@ -4032,9 +4104,9 @@ function kcard(h) {
   d.innerHTML=`<button class="kc-del" onclick="delHW('${h.id}')">✕</button><button class="kc-edit" onclick="editHW('${h.id}')" title="Edit">✏️</button><div class="kc-title">${h.title}</div>${h.notes?`<div style="font-size:11px;color:var(--ink3);margin-bottom:5px;line-height:1.4">${h.notes.substring(0,60)}</div>`:''}<div class="kc-tags"><span class="tag" style="background:${col}22;color:${col}">${h.course}</span>${h.link?`<a class="tag" href="${h.link}" target="_blank" style="background:var(--acll);color:var(--ac);border:1px solid var(--acl);text-decoration:none">Link</a>`:''}${fieldTags}<span class="tag" style="${priC}">${h.priority}</span></div>${h.due?`<div style="font-size:11px;font-weight:${ovd||urg?700:400};color:${ovd?'var(--red)':urg?'var(--amb)':'var(--ink4)'};margin-top:4px">${dueFmt(h.due)}</div>`:''}<div class="kc-acts">${h.status!=='todo'?`<button class="btn bo xs" onclick="mvHW('${h.id}','todo')">← To Do</button>`:''}${h.status!=='ip'?`<button class="btn xs" style="background:var(--ambl);color:var(--amb);border:none" onclick="mvHW('${h.id}','ip')">⚡ Progress</button>`:''}${h.status!=='done'?`<button class="btn bs xs" onclick="mvHW('${h.id}','done')">✅ Done</button>`:''}</div>`;
   return d;
 }
-function mvHW(id,s){const h=DB.hw.find(x=>x.id===id);if(h){h.status=s;save();renderHW();renderDashboard();updateBadge();}}
+function mvHW(id,s){const h=DB.hw.find(x=>x.id===id);if(h){h.status=s;if(s==='done'){h.doneAt=new Date().toISOString();}else{delete h.doneAt;}save();renderHW();renderDashboard();updateBadge();}}
 function delHW(id){DB.hw=DB.hw.filter(x=>x.id!==id);save();renderHW();renderDashboard();updateBadge();}
-function tglHW(id){const h=DB.hw.find(x=>x.id===id);if(h){h.status=h.status==='done'?'todo':'done';save();renderDashboard();renderHW();updateBadge();}}
+function tglHW(id){const h=DB.hw.find(x=>x.id===id);if(h){h.status=h.status==='done'?'todo':'done';if(h.status==='done'){h.doneAt=new Date().toISOString();}else{delete h.doneAt;}save();renderDashboard();renderHW();updateBadge();}}
 function updateBadge(){setText('hw-badge',DB.hw.filter(h=>h.status!=='done').length);}
 
 /* ── NOTES ── */
@@ -7312,18 +7384,8 @@ function pomStart(fromFocus) {
   const fb = g('focus-toggle'); if (fb) fb.textContent = '⏸ Pause';
   pomState.timer = setInterval(() => {
     pomState.secondsLeft--;
-    if (pomState.secondsLeft <= 0) {
-      // Snap the ring straight to fully-closed (no animation) in the same
-      // frame we play the chime, so the two are always exactly in sync —
-      // not dependent on a 1s CSS transition finishing on time.
-      pomUpdateDisplay(true);
-      playChime();
-      pomState._chimed = true;
-      clearInterval(pomState.timer);
-      setTimeout(pomComplete, 700); // brief pause so the closed ring is visible before switching modes
-    } else {
-      pomUpdateDisplay();
-    }
+    pomUpdateDisplay();
+    if (pomState.secondsLeft <= 0) pomComplete();
   }, 1000);
 }
 function pomStop() {
@@ -7371,14 +7433,13 @@ function playChime() {
 }
 function pomComplete() {
   pomStop();
-  // Only chime here for manual skips (pomSkip calls this directly). The
-  // natural end-of-timer path already played it immediately in pomStart's
-  // interval, ahead of the ring-closing delay — don't double it up.
-  if (!pomState._chimed) playChime();
-  pomState._chimed = false;
+  playChime();
   if (pomState.mode === 'focus') {
     DB.pomodoro.todayCount = (DB.pomodoro.todayCount||0) + 1;
     DB.pomodoro.totalMinutes = (DB.pomodoro.totalMinutes||0) + (DB.pomodoro.focus||25);
+    if (!DB.pomodoro.dailyLog) DB.pomodoro.dailyLog = {};
+    const pomToday = new Date().toISOString().slice(0,10);
+    DB.pomodoro.dailyLog[pomToday] = (DB.pomodoro.dailyLog[pomToday]||0) + (DB.pomodoro.focus||25);
     save();
     pomState.currentSession++;
     if (pomState.currentSession > pomState.totalSessions) pomState.currentSession = 1;
@@ -7396,7 +7457,7 @@ function pomComplete() {
   pomUpdateStats();
   if (DB.pomodoro.auto) setTimeout(() => pomStart(), 1500);
 }
-function pomUpdateDisplay(snap) {
+function pomUpdateDisplay() {
   const m = Math.floor(pomState.secondsLeft/60), s = pomState.secondsLeft%60;
   const txt = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
   const el = g('pom-display'); if (el) el.textContent = txt;
@@ -7406,24 +7467,9 @@ function pomUpdateDisplay(snap) {
   const total = { focus: DB.pomodoro.focus||25, short: DB.pomodoro.short||5, long: DB.pomodoro.long||15 }[pomState.mode] * 60;
   const pct = pomState.secondsLeft / total;
   const circ = 603.2;
-  const c = g('pom-circle'), fc = g('focus-ring');
-  // pom-circle and focus-ring animate via a 1s CSS transition on normal
-  // ticks (a nice smooth sweep) — but that means their "closed" position
-  // is only reached ~1s *after* we set the attribute, and that timing can
-  // drift against setInterval/tick jitter. When snap=true (the tick that
-  // hits 00:00), we briefly disable the transition so the ring lands at
-  // fully-closed in the exact same frame as the chime and the readout,
-  // then restore the normal transition for future ticks.
-  const ringEls = [c, fc].filter(Boolean);
-  let origT = [];
-  if (snap) { origT = ringEls.map(x => x.style.transition); ringEls.forEach(x => x.style.transition = 'none'); }
-  if (c) c.setAttribute('stroke-dashoffset', circ * pct);
-  if (fc) fc.setAttribute('stroke-dashoffset', circ * pct);
+  const c = g('pom-circle'); if (c) c.setAttribute('stroke-dashoffset', circ * pct);
+  const fc = g('focus-ring'); if (fc) fc.setAttribute('stroke-dashoffset', circ * pct);
   const dc = g('d-pom-circle'); if (dc) { const c2=213.6; dc.setAttribute('stroke-dashoffset', c2 * pct); }
-  if (snap) {
-    ringEls.forEach(x => x.getBoundingClientRect()); // force reflow so 'none' actually takes effect
-    requestAnimationFrame(() => ringEls.forEach((x,i) => { x.style.transition = origT[i]; }));
-  }
 }
 function pomRenderDots() {
   const total = pomState.totalSessions;
@@ -8050,6 +8096,15 @@ function fcFlip() {
   g('fc-nav-btns').style.display = 'none';
 }
 function fcAnswer(ease) {
+  const card = fcStudyCards[fcStudyIdx];
+  if (card) {
+    card.reviews = (card.reviews||0) + 1;
+    card.ease = ease==='easy'?2.8:ease==='good'?2.3:1.5;
+    if (!DB.flashcards.reviewLog) DB.flashcards.reviewLog = [];
+    DB.flashcards.reviewLog.push({ ts:new Date().toISOString(), deckId:card.deckId, cardId:card.id, rating:ease });
+    if (DB.flashcards.reviewLog.length > 3000) DB.flashcards.reviewLog = DB.flashcards.reviewLog.slice(-3000);
+    save();
+  }
   fcStudyIdx++; fcFlipped = false; fcShowCard();
 }
 function fcNext() { fcStudyIdx++; fcShowCard(); }
@@ -9985,6 +10040,246 @@ function announceInit(){
 }
 document.addEventListener('DOMContentLoaded', announceInit);
 if (document.readyState !== 'loading') announceInit();
+
+/* ══════════════════════════════════════════
+   ANALYTICS PAGE
+   Reads: DB.pomodoro.dailyLog (daily study minutes),
+          DB.hw (status + doneAt), DB.grades, DB.exams,
+          DB.flashcards.reviewLog (deckId, rating, ts)
+══════════════════════════════════════════ */
+let anRange = 7;
+let anCharts = {};
+
+function anCssVar(name){ return (getComputedStyle(document.documentElement).getPropertyValue(name)||'').trim() || '#888'; }
+function anYmd(d){ return d.toISOString().slice(0,10); }
+function anDestroyChart(id){ if (anCharts[id]) { anCharts[id].destroy(); delete anCharts[id]; } }
+function anFmtMins(m){ m = Math.round(m); return `${Math.floor(m/60)}h ${m%60}m`; }
+
+function anSetRange(days){
+  anRange = days;
+  document.querySelectorAll('#an-range-pills .pill').forEach(p=>p.classList.toggle('on', +p.dataset.r===days));
+  anRenderStudyChart();
+}
+
+function anMinutesInRange(days){
+  const log = (DB.pomodoro && DB.pomodoro.dailyLog) || {};
+  const now = new Date(); let total = 0;
+  for (let i=0;i<days;i++){ const d=new Date(now); d.setDate(d.getDate()-i); total += log[anYmd(d)]||0; }
+  return total;
+}
+
+function renderAnalytics(){
+  anRenderStats();
+  anRenderStudyChart();
+  anRenderWeekCompare();
+  anRenderHwDonut();
+  anRenderOntimeDonut();
+  anRenderGradeChart();
+  anRenderSubjectChart();
+  anRenderFlashcards();
+  anRenderExamProgress();
+}
+
+function anRenderStats(){
+  const weekMins = anMinutesInRange(7), monthMins = anMinutesInRange(30);
+  setText('an-st-week', anFmtMins(weekMins));
+  setText('an-st-month', anFmtMins(monthMins));
+  setBar('an-sf-week', Math.min(100, weekMins/(7*60)*100));
+  setBar('an-sf-month', Math.min(100, monthMins/(30*60)*100));
+
+  const tot = DB.hw.length, done = DB.hw.filter(h=>h.status==='done').length;
+  const rate = tot ? Math.round(done/tot*100) : 0;
+  setText('an-st-hwrate', tot ? rate+'%' : '—');
+  setBar('an-sf-hwrate', rate);
+
+  const doneWithDue = DB.hw.filter(h=>h.status==='done' && h.due && h.doneAt);
+  const onTime = doneWithDue.filter(h=> new Date(h.doneAt) <= new Date(h.due+'T23:59:59'));
+  const onTimeRate = doneWithDue.length ? Math.round(onTime.length/doneWithDue.length*100) : null;
+  setText('an-st-ontime', onTimeRate===null ? '—' : onTimeRate+'%');
+  setText('an-st-ontime-sub', doneWithDue.length ? `of ${doneWithDue.length} tracked` : 'complete tasks to track this');
+  setBar('an-sf-ontime', onTimeRate||0);
+}
+
+function anRenderStudyChart(){
+  const el = g('an-study-chart'); if (!el) return;
+  const log = (DB.pomodoro && DB.pomodoro.dailyLog) || {};
+  const days = anRange, labels = [], data = [];
+  const now = new Date();
+  for (let i=days-1;i>=0;i--){
+    const d = new Date(now); d.setDate(d.getDate()-i);
+    labels.push(d.toLocaleDateString('en-CA',{month:'short',day:'numeric'}));
+    data.push(log[anYmd(d)]||0);
+  }
+  anDestroyChart('study');
+  const ac = anCssVar('--ac'), ink4 = anCssVar('--ink4'), bor = anCssVar('--bor');
+  anCharts.study = new Chart(el.getContext('2d'), {
+    type:'bar',
+    data:{ labels, datasets:[{ label:'Minutes studied', data, backgroundColor: ac, borderRadius:4, maxBarThickness: days>14?10:28 }] },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(ctx)=>anFmtMins(ctx.parsed.y) } } },
+      scales:{ x:{ ticks:{ color:ink4, maxRotation:0, autoSkip:true }, grid:{display:false} },
+               y:{ ticks:{ color:ink4 }, grid:{ color:bor } } } }
+  });
+}
+
+function anRenderWeekCompare(){
+  const el = g('an-weekcompare'); if (!el) return;
+  const log = (DB.pomodoro && DB.pomodoro.dailyLog) || {};
+  const now = new Date();
+  function sumRange(startAgo, endAgo){
+    let t=0;
+    for (let i=endAgo;i<=startAgo;i++){ const d=new Date(now); d.setDate(d.getDate()-i); t += log[anYmd(d)]||0; }
+    return t;
+  }
+  const thisWeek = sumRange(6,0), lastWeek = sumRange(13,7);
+  const daysAgo = h => (now - new Date(h.doneAt)) / 86400000;
+  const hwThisWeek = DB.hw.filter(h=>h.doneAt && daysAgo(h)<=7).length;
+  const hwLastWeek = DB.hw.filter(h=>h.doneAt && daysAgo(h)>7 && daysAgo(h)<=14).length;
+
+  function row(label, cur, prev, fmt){
+    const delta = cur - prev, flat = delta===0, up = delta>0;
+    const color = flat ? 'var(--ink4)' : (up ? 'var(--ac)' : 'var(--red)');
+    const arrow = flat ? '→' : (up ? '↑' : '↓');
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--bor)">
+      <div style="font-size:12.5px;color:var(--ink3)">${label}</div>
+      <div style="text-align:right">
+        <div style="font-weight:700;font-size:13.5px">${fmt(cur)}</div>
+        <div style="font-size:10.5px;color:${color}">${arrow} ${fmt(Math.abs(delta))} vs last week</div>
+      </div>
+    </div>`;
+  }
+  el.innerHTML = row('Study time', thisWeek, lastWeek, anFmtMins) + row('Assignments completed', hwThisWeek, hwLastWeek, v=>v+' done');
+}
+
+function anLegendRow(c,l,v){ return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><span style="width:9px;height:9px;border-radius:50%;background:${c};display:inline-block;flex-shrink:0"></span><span style="color:var(--ink3)">${l}</span><span style="margin-left:auto;font-weight:700">${v}</span></div>`; }
+
+function anRenderHwDonut(){
+  const el = g('an-hw-donut'); if (!el) return;
+  const todo = DB.hw.filter(h=>h.status==='todo').length;
+  const ip = DB.hw.filter(h=>h.status==='ip').length;
+  const done = DB.hw.filter(h=>h.status==='done').length;
+  anDestroyChart('hw');
+  const colors = [anCssVar('--ac'), anCssVar('--amb'), anCssVar('--bor2')];
+  anCharts.hw = new Chart(el.getContext('2d'), {
+    type:'doughnut',
+    data:{ labels:['Done','In progress','To do'], datasets:[{ data:[done,ip,todo], backgroundColor:colors, borderWidth:0 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'68%', plugins:{legend:{display:false}} }
+  });
+  const tot = todo+ip+done;
+  g('an-hw-legend').innerHTML = tot ? (anLegendRow(colors[0],'Done',done)+anLegendRow(colors[1],'In progress',ip)+anLegendRow(colors[2],'To do',todo)) : '<div class="emp" style="padding:12px 0">No assignments yet</div>';
+}
+
+function anRenderOntimeDonut(){
+  const el = g('an-ontime-donut'); if (!el) return;
+  const doneWithDue = DB.hw.filter(h=>h.status==='done' && h.due && h.doneAt);
+  const onTime = doneWithDue.filter(h=> new Date(h.doneAt) <= new Date(h.due+'T23:59:59')).length;
+  const late = doneWithDue.length - onTime;
+  anDestroyChart('ontime');
+  const colors = [anCssVar('--ac'), anCssVar('--red')];
+  anCharts.ontime = new Chart(el.getContext('2d'), {
+    type:'doughnut',
+    data:{ labels:['On-time','Late'], datasets:[{ data:[onTime,late], backgroundColor:colors, borderWidth:0 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'68%', plugins:{legend:{display:false}} }
+  });
+  g('an-ontime-legend').innerHTML = doneWithDue.length ? (anLegendRow(colors[0],'On-time',onTime)+anLegendRow(colors[1],'Late',late)) : '<div class="emp" style="padding:12px 0">Complete tasks with due dates to see this</div>';
+}
+
+function anRenderGradeChart(){
+  const card = g('an-grade-card');
+  if (!DB.grades.length) { card.innerHTML = '<div class="emp"><span class="ei">📊</span><p>No grades logged yet</p></div>'; return; }
+  if (!g('an-grade-chart')) card.innerHTML = '<canvas id="an-grade-chart"></canvas>';
+  const dated = [...DB.grades].filter(gr=>gr.date).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const undated = DB.grades.filter(gr=>!gr.date);
+  const all = [...dated, ...undated];
+  const labels = all.map(gr=> gr.date ? new Date(gr.date).toLocaleDateString('en-CA',{month:'short',day:'numeric'}) : gr.name.slice(0,10));
+  const data = all.map(gr=>gr.pct);
+  const avgData = data.map((_,i)=>{ const slice = data.slice(Math.max(0,i-3), i+1); return Math.round(slice.reduce((s,v)=>s+v,0)/slice.length); });
+  anDestroyChart('grade');
+  const ink4 = anCssVar('--ink4'), bor = anCssVar('--bor'), blu = anCssVar('--blu'), ac = anCssVar('--ac');
+  anCharts.grade = new Chart(g('an-grade-chart').getContext('2d'), {
+    type:'line',
+    data:{ labels, datasets:[
+      { label:'Grade %', data, borderColor:blu, backgroundColor:'transparent', tension:.3, pointRadius:3 },
+      { label:'Trend', data:avgData, borderColor:ac, backgroundColor:'transparent', tension:.3, pointRadius:0, borderDash:[5,4] }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'bottom', labels:{ color:ink4, boxWidth:10, font:{size:10.5} } } },
+      scales:{ x:{ ticks:{ color:ink4, maxRotation:0, autoSkip:true }, grid:{display:false} },
+               y:{ min:0, max:100, ticks:{ color:ink4 }, grid:{ color:bor } } } }
+  });
+}
+
+function anRenderSubjectChart(){
+  const card = g('an-subject-card');
+  const byCourse = {};
+  const bump = (name, n) => { name = name||'General'; byCourse[name] = (byCourse[name]||0)+n; };
+  DB.hw.forEach(h=> bump(h.course, 1));
+  DB.grades.forEach(gr=> bump(gr.course, 1));
+  const deckCourse = {};
+  (DB.flashcards?.decks||[]).forEach(d=> deckCourse[d.id] = d.courseId || 'General');
+  (DB.flashcards?.reviewLog||[]).forEach(r=> bump(deckCourse[r.deckId]||'General', 1));
+
+  const entries = Object.entries(byCourse).sort((a,b)=>b[1]-a[1]);
+  if (!entries.length) { card.innerHTML = '<div class="emp"><span class="ei">📚</span><p>Add homework, grades or flashcards to see subject activity</p></div>'; return; }
+  if (!g('an-subject-chart')) card.innerHTML = '<canvas id="an-subject-chart"></canvas>';
+  const labels = entries.map(e=>e[0]), data = entries.map(e=>e[1]);
+  const acFallback = anCssVar('--ac');
+  const colorFor = (name)=>{ const c = DB.courses.find(c=>c.name===name); return c?c.color:acFallback; };
+  anDestroyChart('subject');
+  const ink4 = anCssVar('--ink4'), bor = anCssVar('--bor');
+  anCharts.subject = new Chart(g('an-subject-chart').getContext('2d'), {
+    type:'bar',
+    data:{ labels, datasets:[{ label:'Activity', data, backgroundColor: labels.map(colorFor), borderRadius:4 }] },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{ x:{ ticks:{ color:ink4 }, grid:{ color:bor } }, y:{ ticks:{ color:ink4 }, grid:{display:false} } } }
+  });
+}
+
+function anRenderFlashcards(){
+  const card = g('an-fc-card');
+  const log = DB.flashcards?.reviewLog || [];
+  if (!log.length) { card.innerHTML = '<div class="emp"><span class="ei">🃏</span><p>Study a deck to start tracking performance</p></div>'; return; }
+  const counts = { easy:0, good:0, hard:0 };
+  log.forEach(r=> counts[r.rating] = (counts[r.rating]||0)+1);
+  const score = v => v==='easy'?100:v==='good'?70:30;
+  const avgScore = Math.round(log.reduce((s,r)=>s+score(r.rating),0)/log.length);
+  const recent = log.slice(-20);
+  const recentScore = Math.round(recent.reduce((s,r)=>s+score(r.rating),0)/recent.length);
+  const trend = recentScore - avgScore;
+  card.innerHTML = `
+    <div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap">
+      <div><div class="stat-lbl">Cards reviewed</div><div class="stat-val" style="font-size:24px">${log.length}</div></div>
+      <div><div class="stat-lbl">Avg score</div><div class="stat-val" style="font-size:24px">${avgScore}%</div></div>
+      <div><div class="stat-lbl">Recent trend</div><div class="stat-val" style="font-size:24px;color:${trend>=0?'var(--ac)':'var(--red)'}">${trend>=0?'+':''}${trend}</div></div>
+    </div>
+    <div class="sec-lbl" style="margin-bottom:8px">Rating breakdown</div>
+    ${['easy','good','hard'].map(k=>{
+      const pct = Math.round((counts[k]||0)/log.length*100);
+      const colr = k==='easy'?'var(--ac)':k==='good'?'var(--blu)':'var(--amb)';
+      return `<div style="margin-bottom:7px"><div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink3);margin-bottom:3px"><span style="text-transform:capitalize">${k}</span><span>${counts[k]||0} (${pct}%)</span></div><div class="stat-bar"><div class="stat-fill" style="width:${pct}%;background:${colr}"></div></div></div>`;
+    }).join('')}
+  `;
+}
+
+function anRenderExamProgress(){
+  const card = g('an-exam-card');
+  const exams = (DB.exams||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+  if (!exams.length) { card.innerHTML = '<div class="emp"><span class="ei">⏳</span><p>No exams planned yet</p></div>'; return; }
+  card.innerHTML = exams.map(ex=>{
+    const prog = examProgress(ex);
+    const days = dLeft(ex.date);
+    const col = ex.ccolor || '#0F6B30';
+    return `<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--bor)">
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px;gap:8px">
+        <span style="font-weight:700;color:${col}">${ex.title}</span>
+        <span style="color:var(--ink4);white-space:nowrap">${days<0?'Past':days===0?'Today':days+'d left'}</span>
+      </div>
+      <div class="stat-bar"><div class="stat-fill" style="width:${prog.pct}%;background:${col}"></div></div>
+      <div style="font-size:10.5px;color:var(--ink4);margin-top:4px">${prog.done}/${prog.total} prep tasks · ${prog.pct}%</div>
+    </div>`;
+  }).join('');
+}
 
 </script>
 </body>
