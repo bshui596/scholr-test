@@ -8333,11 +8333,12 @@ function examBuildDayScaffold(examDateStr, studyWindow){
 // Asks the AI backend to write the actual day-by-day task content for an
 // exam study plan. Falls back to the local template generator (genExamStudyPlan)
 // if the AI call fails or is unavailable, so exam saving never breaks.
-async function examGenerateAiPlan(topics, examDateStr, studyWindow, examTitle){
+async function examGenerateAiPlan(topics, examDateStr, studyWindow, examTitle, examType){
   const scaffold = examBuildDayScaffold(examDateStr, studyWindow);
   try {
     const data = await aiPost('/api/examplan', {
-      topics, examTitle: examTitle || 'this exam', dayCount: scaffold.length
+      topics, examTitle: examTitle || 'this exam', dayCount: scaffold.length,
+      examType: examType || 'Test'
     });
     const aiDays = Array.isArray(data.days) ? data.days : null;
     if (!aiDays || aiDays.length !== scaffold.length) throw new Error('Unexpected AI response shape');
@@ -8350,7 +8351,7 @@ async function examGenerateAiPlan(topics, examDateStr, studyWindow, examTitle){
     });
   } catch (err) {
     console.error('AI exam plan failed, using local generator:', err);
-    return genExamStudyPlan(topics, examDateStr, studyWindow);
+    return genExamStudyPlan(topics, examDateStr, studyWindow, examType);
   }
 }
 
@@ -8358,7 +8359,23 @@ async function examGenerateAiPlan(topics, examDateStr, studyWindow, examTitle){
 // spreading the given topics across the available days (or generic
 // review tasks if no topics were given), with the day(s) closest to
 // the exam reserved for cumulative review.
-function genExamStudyPlan(topics, examDateStr, studyWindow){
+//
+// Task language is tailored to the exam TYPE — a Presentation, Lab, or
+// Essay needs a completely different prep routine than a Test/Quiz, so
+// "just study the topics" doesn't actually help the student prepare.
+const EXAM_TYPE_CONFIG = {
+  'Test':           { topicVerb: t => t, genericTasks: ['Practice problems & self-quiz','Review weak areas & flashcards','Timed practice test','Summarize key concepts','Redo missed problems'], reviewTasks: ['Final review — go over every topic','Practice questions / past exam'] },
+  'Final Exam':     { topicVerb: t => t, genericTasks: ['Practice problems & self-quiz','Review weak areas & flashcards','Timed practice test','Summarize key concepts','Redo missed problems','Build a cumulative cheat sheet'], reviewTasks: ['Full cumulative review — every unit','Timed practice under exam conditions'] },
+  'Quiz':           { topicVerb: t => t, genericTasks: ['Skim notes & flashcards','Quick self-quiz','Review weak spots'], reviewTasks: ['Final skim of notes & flashcards','Quick practice questions'] },
+  'Presentation':   { topicVerb: t => `Prepare & outline: ${t}`, genericTasks: ['Draft the slide outline','Build out slide content','Design visuals & transitions','Write speaker notes','Time a practice run-through'], reviewTasks: ['Full timed run-through, start to finish','Prepare for Q&A / anticipated questions'] },
+  'Lab':            { topicVerb: t => `Review procedure: ${t}`, genericTasks: ['Review the lab manual / procedure','Review safety steps & equipment','Practice calculations / data analysis','Review expected results & sources of error'], reviewTasks: ['Walk through the full procedure start to finish','Review write-up format & sample results'] },
+  'Essay':          { topicVerb: t => `Draft section: ${t}`, genericTasks: ['Research & gather sources','Draft thesis & outline','Write a body paragraph','Revise for clarity & flow','Check citations & formatting'], reviewTasks: ['Full read-through & polish','Final proofread & citation check'] },
+  'Other':          { topicVerb: t => t, genericTasks: ['Review notes & materials','Practice / apply key concepts','Review weak areas'], reviewTasks: ['Final review','Last practice pass'] }
+};
+function examTypeConfig(type){ return EXAM_TYPE_CONFIG[type] || EXAM_TYPE_CONFIG['Test']; }
+
+function genExamStudyPlan(topics, examDateStr, studyWindow, examType){
+  const cfg = examTypeConfig(examType);
   const exam = new Date(examDateStr+'T00:00:00');
   const today = new Date(); today.setHours(0,0,0,0);
   const allDays = [];
@@ -8376,32 +8393,30 @@ function genExamStudyPlan(topics, examDateStr, studyWindow){
   const byDate = Object.fromEntries(plan.map(p=>[p.date, p]));
 
   if (!topics.length) {
-    const genericTasks = ['Practice problems & self-quiz','Review weak areas & flashcards','Timed practice test','Summarize key concepts','Redo missed problems'];
     topicDays.forEach((d,i) => {
-      const text = i===0 ? 'Review notes & course material' : genericTasks[(i-1) % genericTasks.length];
+      const text = i===0 ? cfg.genericTasks[0] : cfg.genericTasks[i % cfg.genericTasks.length];
       byDate[examIsoDate(d)].tasks.push(examMkTask(text,'practice'));
     });
   } else if (topics.length <= topicDays.length) {
     const perDay = topicDays.length / topics.length;
     topics.forEach((t,i) => {
       const dayIdx = Math.min(topicDays.length-1, Math.floor(i*perDay));
-      byDate[examIsoDate(topicDays[dayIdx])].tasks.push(examMkTask(t,'topic'));
+      byDate[examIsoDate(topicDays[dayIdx])].tasks.push(examMkTask(cfg.topicVerb(t),'topic'));
     });
-    const genericTasks2 = ['Practice problems & self-quiz','Review weak areas & flashcards','Timed practice test'];
     let gi = 0;
     topicDays.forEach(d => {
       const p = byDate[examIsoDate(d)];
-      if (!p.tasks.length) { p.tasks.push(examMkTask(genericTasks2[gi % genericTasks2.length],'practice')); gi++; }
+      if (!p.tasks.length) { p.tasks.push(examMkTask(cfg.genericTasks[gi % cfg.genericTasks.length],'practice')); gi++; }
     });
   } else {
     topics.forEach((t,i) => {
       const dayIdx = i % topicDays.length;
-      byDate[examIsoDate(topicDays[dayIdx])].tasks.push(examMkTask(t,'topic'));
+      byDate[examIsoDate(topicDays[dayIdx])].tasks.push(examMkTask(cfg.topicVerb(t),'topic'));
     });
   }
   reviewDays.forEach(d => {
-    byDate[examIsoDate(d)].tasks.push(examMkTask('Final review — go over every topic','review'));
-    byDate[examIsoDate(d)].tasks.push(examMkTask('Practice questions / past exam','review'));
+    byDate[examIsoDate(d)].tasks.push(examMkTask(cfg.reviewTasks[0],'review'));
+    byDate[examIsoDate(d)].tasks.push(examMkTask(cfg.reviewTasks[1],'review'));
   });
   return plan;
 }
@@ -8466,14 +8481,15 @@ async function examSave(){
   const saveBtn = document.querySelector('.mdl-acts .btn.bp[onclick="examSave()"]');
   const prevLabel = saveBtn ? saveBtn.textContent : '';
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '✨ AI is planning…'; }
-  const plan = await examGenerateAiPlan(topics, date, window, title);
+  const examType = g('exam-type')?.value || 'Test';
+  const plan = await examGenerateAiPlan(topics, date, window, title, examType);
   if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = prevLabel; }
 
   const old = existingIdx>=0 ? DB.exams[existingIdx] : null;
   if (old) examMergePlanProgress(old.plan, plan);
   const exam = {
     id, course, ccolor: c?c.color:'#0F6B30', title, date,
-    type: g('exam-type')?.value||'Test', pri: +(g('exam-pri')?.value ?? 1), window,
+    type: examType, pri: +(g('exam-pri')?.value ?? 1), window,
     time: g('exam-time')?.value||'', location: g('exam-loc')?.value.trim()||'',
     topics, plan,
     calEventId: old?old.calEventId:null,
