@@ -1004,6 +1004,8 @@ img{max-width:100%}
 .wp-exam-chip-meta{font-size:9.5px;font-weight:600;color:var(--ink4)}
 .wp-col-exam{margin:6px 7px 0;padding:4px 7px;border-radius:7px;background:var(--acll);color:var(--ac);font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wp-col-exam:hover{text-decoration:underline}
+.wp-col-hw{margin:6px 7px 0;padding:4px 7px;border-radius:7px;background:var(--blul);color:var(--blu);font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wp-col-hw:hover{text-decoration:underline}
 .wp-item-examlink{color:var(--ac);font-weight:700;cursor:pointer}
 .wp-item-examname{color:var(--ac);font-weight:800;cursor:pointer}
 .wp-item-examname:hover{text-decoration:underline}
@@ -1706,6 +1708,7 @@ document.addEventListener('DOMContentLoaded',function(){
                   <option value="4.3">4.3 Scale (+)</option>
                   <option value="100">Percentage</option>
                 </select>
+                <button class="btn bo sm" onclick="gpaImportFromGradebook()" title="Pull in your current course averages from Grade Book as letter grades">⇩ Import from Gradebook</button>
                 <button class="btn bp sm" onclick="gpaAddRow()">+ Add Course</button>
               </div>
             </div>
@@ -2372,7 +2375,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
             <div class="card" style="padding:18px;margin-bottom:14px">
               <h3 style="font-family:var(--font-h);font-size:16px;margin-bottom:8px">6 · Study & track grades</h3>
-              <p style="font-size:13px;line-height:1.7;color:var(--ink3)">Log marks in <strong>Grade Book</strong> and see averages update live; use <strong>GPA Calculator</strong> for what-if planning. Review with <strong>Flashcards</strong> (spaced by how easy you rate each card) and the <strong>Pomodoro</strong> timer to structure focus sessions — your streak builds automatically on the Day Plan page.</p>
+              <p style="font-size:13px;line-height:1.7;color:var(--ink3)">Log marks in <strong>Grade Book</strong> and see averages update live; use <strong>GPA Calculator</strong> for what-if planning — click <strong>⇩ Import from Gradebook</strong> there to pull in your current course averages instead of typing grades twice. Review with <strong>Flashcards</strong> (spaced by how easy you rate each card) and the <strong>Pomodoro</strong> timer to structure focus sessions — your streak builds automatically whenever you finish homework, review flashcards, check off an exam study task, or add a Day Plan block.</p>
             </div>
 
             <div class="card" style="padding:18px;margin-bottom:14px">
@@ -2558,6 +2561,7 @@ document.addEventListener('DOMContentLoaded',function(){
             <button class="tb tbi" onclick="showMo('mo-tbl')" title="Insert a table"><span class="tbi-ic">⊞</span><span class="tbi-lbl">Table</span></button>
             <button class="tb tbi" onclick="insLink()" title="Insert a link"><span class="tbi-ic">🔗</span><span class="tbi-lbl">Link</span></button>
             <button class="tb tbi" onclick="insCheck()" title="Insert a checkbox"><span class="tbi-ic">☑</span><span class="tbi-lbl">Checkbox</span></button>
+            <button class="tb tbi" onclick="sendSelToFlashcards()" title="Turn the highlighted text into a real flashcard in your Flashcards deck"><span class="tbi-ic">📤</span><span class="tbi-lbl">To Flashcard</span></button>
             <div class="tbdiv"></div>
 
             <div class="ins-dd">
@@ -2589,7 +2593,6 @@ document.addEventListener('DOMContentLoaded',function(){
                 <div class="ins-dd-lbl">Study tools</div>
                 <div class="ins-dd-grid">
                   <button class="ins-dd-item" onclick="insFlashcard()">🃏 Flashcard</button>
-                  <button class="ins-dd-item" onclick="sendSelToFlashcards()" title="Turns the text you've highlighted into a real card in your Flashcards deck">📤 Selection → Deck</button>
                   <button class="ins-dd-item" onclick="insRubric()">🧾 Rubric</button>
                   <button class="ins-dd-item" onclick="insTimeline()">📍 Timeline</button>
                   <button class="ins-dd-item" onclick="insSteps()">🪜 Steps</button>
@@ -4268,9 +4271,11 @@ function wtdGoalCandidates() {
     const score = urgency;
     const urgencyLevel = score > 55 ? 'high' : score > 30 ? 'med' : 'low';
     const c = DB.courses.find(c => c.name === gl.course);
-    const reason = days !== null
+    const nextHw = goalNextAssignment(gl.course);
+    const hwClause = nextHw ? ` "${nextHw.title}" is due ${dueFmt(nextHw.due).toLowerCase()} — a good place to focus.` : '';
+    const reason = (days !== null
       ? `Your ${gl.course} average is ${gap.toFixed(1)}% below your ${gl.target}% goal, ${days < 0 ? 'and the deadline has passed' : `with ${days} day${days === 1 ? '' : 's'} left`}.`
-      : `Your ${gl.course} average is ${gap.toFixed(1)}% below your ${gl.target}% goal.`;
+      : `Your ${gl.course} average is ${gap.toFixed(1)}% below your ${gl.target}% goal.`) + hwClause;
     return { type: 'goal', id: gl.id, title: `Catch up in ${gl.course}`, score, urgencyLevel, reason, estMin: 25,
       dueLabel: days !== null ? (days < 0 ? 'Past deadline' : dueFmt(gl.deadline)) : `${avg.toFixed(1)}% avg`, color: c?.color || 'var(--ac)' };
   }).filter(Boolean);
@@ -4384,12 +4389,12 @@ function kcard(h) {
   const ovd=h.due&&dLeft(h.due)<0&&h.status!=='done', urg=!ovd&&h.due&&dLeft(h.due)<=2&&h.status!=='done';
   const priC=h.priority==='High'?'background:#FEE2E2;color:#B91C1C':h.priority==='Medium'?'background:#FEF3C7;color:#92400E':'background:#D1FAE5;color:#065F46';
   const fieldTags=(h.fields||[]).filter(f=>f.k).map(f=>`<span class="tag" style="background:var(--s2);color:var(--ink)">${f.k}${f.v?': '+f.v:''}</span>`).join('');
-  d.innerHTML=`<button class="kc-del" onclick="delHW('${h.id}')">✕</button><button class="kc-edit" onclick="editHW('${h.id}')" title="Edit">✏️</button><div class="kc-title">${h.title}</div>${h.notes?`<div style="font-size:11px;color:var(--ink3);margin-bottom:5px;line-height:1.4">${h.notes.substring(0,60)}</div>`:''}<div class="kc-tags"><span class="tag" style="background:${col}22;color:${col}">${h.course}</span>${h.link?`<a class="tag" href="${h.link}" target="_blank" style="background:var(--acll);color:var(--ac);border:1px solid var(--acl);text-decoration:none">Link</a>`:''}${fieldTags}<span class="tag" style="${priC}">${h.priority}</span></div>${h.due?`<div style="font-size:11px;font-weight:${ovd||urg?700:400};color:${ovd?'var(--red)':urg?'var(--amb)':'var(--ink4)'};margin-top:4px">${dueFmt(h.due)}</div>`:''}<div class="kc-acts">${h.status!=='todo'?`<button class="btn bo xs" onclick="mvHW('${h.id}','todo')">← To Do</button>`:''}${h.status!=='ip'?`<button class="btn xs" style="background:var(--ambl);color:var(--amb);border:none" onclick="mvHW('${h.id}','ip')">⚡ Progress</button>`:''}${h.status!=='done'?`<button class="btn bs xs" onclick="mvHW('${h.id}','done')">✅ Done</button>`:''}</div>`;
+  d.innerHTML=`<button class="kc-del" onclick="delHW('${h.id}')">✕</button><button class="kc-edit" onclick="editHW('${h.id}')" title="Edit">✏️</button><div class="kc-title">${h.title}</div>${h.notes?`<div style="font-size:11px;color:var(--ink3);margin-bottom:5px;line-height:1.4">${h.notes.substring(0,60)}</div>`:''}<div class="kc-tags"><span class="tag" style="background:${col}22;color:${col}">${h.course}</span>${h.link?`<a class="tag" href="${h.link}" target="_blank" style="background:var(--acll);color:var(--ac);border:1px solid var(--acl);text-decoration:none">Link</a>`:''}${fieldTags}<span class="tag" style="${priC}">${h.priority}</span></div>${h.due?`<div style="font-size:11px;font-weight:${ovd||urg?700:400};color:${ovd?'var(--red)':urg?'var(--amb)':'var(--ink4)'};margin-top:4px">${dueFmt(h.due)}</div>`:''}<div class="kc-acts">${h.status!=='todo'?`<button class="btn bo xs" onclick="mvHW('${h.id}','todo')">← To Do</button>`:''}${h.status!=='ip'?`<button class="btn xs" style="background:var(--ambl);color:var(--amb);border:none" onclick="mvHW('${h.id}','ip')">⚡ Progress</button>`:''}${h.status!=='done'?`<button class="btn bs xs" onclick="mvHW('${h.id}','done')">✅ Done</button>`:''}${h.status!=='done'?`<button class="btn bo xs" onclick="pomFocusOn('${h.course.replace(/'/g,"\\'")}')" title="Start a focus session for this course">🍅</button>`:''}</div>`;
   return d;
 }
 function mvHW(id,s){const h=DB.hw.find(x=>x.id===id);if(h){h.status=s;h.completedAt=s==='done'?Date.now():null;save();renderHW();renderDashboard();updateBadge();}}
 function delHW(id){DB.hw=DB.hw.filter(x=>x.id!==id);save();renderHW();renderDashboard();updateBadge();}
-function tglHW(id){const h=DB.hw.find(x=>x.id===id);if(h){h.status=h.status==='done'?'todo':'done';h.completedAt=h.status==='done'?Date.now():null;save();renderDashboard();renderHW();updateBadge();}}
+function tglHW(id){const h=DB.hw.find(x=>x.id===id);if(h){h.status=h.status==='done'?'todo':'done';h.completedAt=h.status==='done'?Date.now():null;if(h.status==='done')markStreakToday();save();renderDashboard();renderHW();updateBadge();renderStreak();}}
 function updateBadge(){setText('hw-badge',DB.hw.filter(h=>h.status!=='done').length);}
 
 /* ── NOTES ── */
@@ -5604,9 +5609,7 @@ function saveDp(){
   if(!day.blocks) day.blocks=[];
   day.blocks.push({what,start:g('dp-s').value||'00:00',end:g('dp-e').value||'',type:g('dp-ty').value,course:g('dp-co').value});
   day.blocks.sort((a,b)=>a.start.localeCompare(b.start));
-  if(!DB.streak) DB.streak=[];
-  const dk=new Date().toISOString().slice(0,10);
-  if(!DB.streak.includes(dk)) DB.streak.push(dk);
+  markStreakToday();
   save(); closeMo('mo-dp'); g('dp-wh').value=''; renderDayPlan(); toast('Block added!');
 }
 function rmDpBlock(dn,idx){
@@ -5614,6 +5617,16 @@ function rmDpBlock(dn,idx){
   day.blocks.splice(idx,1); save(); renderDayPlan();
 }
 
+// Shared "did something today" marker for the streak grid. Previously only
+// adding a day-plan block counted — finishing a homework item, reviewing
+// flashcards, or checking off an exam study task were all real study
+// activity that left the streak untouched. All of those now feed it too.
+function markStreakToday(){
+  if(!DB.streak) DB.streak=[];
+  const dk=new Date().toISOString().slice(0,10);
+  if(!DB.streak.includes(dk)){ DB.streak.push(dk); return true; }
+  return false;
+}
 function renderStreak(){
   const grid=g('sg'); if(!grid) return;
   const today=new Date(), streak=DB.streak||[]; let cnt=0;
@@ -5678,6 +5691,15 @@ function courseAvg(course){
   const cg=(DB.grades||[]).filter(g=>g.course===course);
   return cg.length ? cg.reduce((s,g)=>s+g.pct,0)/cg.length : null;
 }
+// The nearest not-yet-done homework item for a course — lets a Grade Goal
+// answer "so what do I actually do about it?" instead of just showing a
+// number that's behind target. Overdue items still count as "next", since
+// they're still the most relevant thing sitting there.
+function goalNextAssignment(course){
+  const pending=(DB.hw||[]).filter(h=>h.course===course && h.status!=='done' && h.due);
+  if(!pending.length) return null;
+  return pending.sort((a,b)=>new Date(a.due)-new Date(b.due))[0];
+}
 function openGoal(course){
   showMo('mo-goal');
   const existing=(DB.goals||[]).find(x=>x.course===course);
@@ -5716,6 +5738,14 @@ function renderGoals(){
     else if(onTrack) statusTxt='✅ On track';
     else if(close) statusTxt=`⚠️ ${(gl.target-avg).toFixed(1)}% to go`;
     else statusTxt=`🔻 ${(gl.target-avg).toFixed(1)}% below target`;
+    const nextHw = goalNextAssignment(gl.course);
+    const nextHwOvd = nextHw && dLeft(nextHw.due)<0;
+    const nextHwLine = nextHw
+      ? `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--bor);font-size:11px;cursor:pointer" onclick="event.stopPropagation();go('homework')" title="Go to Homework">
+           <span style="color:var(--ink3);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📌 Next: ${escapeHtml(nextHw.title)}</span>
+           <span style="color:${nextHwOvd?'var(--red)':'var(--ink4)'};font-weight:${nextHwOvd?'700':'400'};white-space:nowrap;margin-left:8px">${dueFmt(nextHw.due)}</span>
+         </div>`
+      : '';
     return `<div class="card" style="padding:14px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">
         <div style="min-width:0">
@@ -5736,6 +5766,7 @@ function renderGoals(){
         <span>${statusTxt}</span>
         ${gl.deadline?`<span>${daysLeft<0?'Past deadline':daysLeft===0?'Due today':daysLeft+'d left'}</span>`:''}
       </div>
+      ${nextHwLine}
     </div>`;
   }).join('');
 }
@@ -5862,6 +5893,10 @@ function renderPlanner(){
   const items=(DB.planner||[]).filter(i=>i.week===week);
   const monIso=examIsoDate(monday), sunIso=examIsoDate(sunday);
   const weekExams=(DB.exams||[]).filter(e=>e.date>=monIso && e.date<=sunIso).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  // Homework due this week never showed up in the Weekly Planner at all —
+  // only exams did (via weekExams below). A course could have three
+  // assignments due Wednesday and the planner would show nothing.
+  const weekHW=(DB.hw||[]).filter(h=>h.status!=='done' && h.due && h.due>=monIso && h.due<=sunIso);
   const stripEl=g('wp-exam-strip');
   if(stripEl){
     stripEl.style.display = weekExams.length ? 'flex' : 'none';
@@ -5880,9 +5915,12 @@ function renderPlanner(){
     const dayExams = weekExams.filter(e=>e.date===examIsoDate(dayDate));
     const dayBadgeIc = dayExams.length>1 ? '🗓️' : (dayExams.length ? (EXAM_TYPE_IC[dayExams[0].type]||'📝') : '');
     const examBadge = dayExams.length ? `<div class="wp-col-exam" title="${escapeHtml(dayExams.map(e=>e.title).join(', '))}" onclick="examOpenAndExpand('${dayExams[0].id}')">${dayBadgeIc} ${dayExams.length>1?dayExams.length+' exams':escapeHtml(dayExams[0].title)}</div>` : '';
+    const dayHW = weekHW.filter(h=>h.due===examIsoDate(dayDate));
+    const hwBadge = dayHW.length ? `<div class="wp-col-hw" title="${escapeHtml(dayHW.map(h=>h.title).join(', '))}" onclick="${dayHW.length===1?`editHW('${dayHW[0].id}')`:`go('homework')`}">📚 ${dayHW.length>1?dayHW.length+' due':escapeHtml(dayHW[0].title)}</div>` : '';
     return `<div class="wp-col ${isToday?'wp-today':''}">
       <div class="wp-col-hd"><span>${label}</span><span class="wp-col-date">${dayDate.getDate()}</span></div>
       ${examBadge}
+      ${hwBadge}
       <div class="wp-col-body">${dayItems.length?dayItems.map(i=>{
         const linkedExam = i.examId ? (DB.exams||[]).find(e=>e.id===i.examId) : null;
         return `
@@ -7852,6 +7890,7 @@ function pomComplete() {
     const course = g('pom-course')?.value || '';
     DB.studyLog.push({ id:'sl'+Date.now(), ts: Date.now(), minutes: mins, course });
     if (DB.studyLog.length > 3000) DB.studyLog = DB.studyLog.slice(-3000); // keep the log from growing forever
+    markStreakToday(); // a completed focus session is real study time — it belongs in the streak same as finishing homework or a flashcard review
     save();
     pomState.currentSession++;
     if (pomState.currentSession > pomState.totalSessions) pomState.currentSession = 1;
@@ -7867,6 +7906,7 @@ function pomComplete() {
   }
   pomRenderDots();
   pomUpdateStats();
+  renderStreak();
   if (DB.pomodoro.auto) setTimeout(() => pomStart(), 1500);
 }
 function pomUpdateDisplay() {
@@ -7920,6 +7960,18 @@ function pomPopulateCourseSel() {
   const prev = sel.value;
   sel.innerHTML = '<option value="">General</option>' + DB.courses.map(c => `<option>${c.name}</option>`).join('');
   if (prev) setSel('pom-course', prev);
+}
+// One-click bridge from a homework card or exam study task straight into a
+// focus session for that course — previously the only way to set the
+// Pomodoro's course was to open the timer and pick it from a dropdown
+// yourself, with no memory of what you were actually working on.
+function pomFocusOn(course) {
+  go('pomodoro');
+  setTimeout(() => {
+    pomPopulateCourseSel();
+    if (course) setSel('pom-course', course);
+    toast(`🍅 Focus session ready for ${course || 'General'} — press Start when you're set.`);
+  }, 30);
 }
 function pomUpdateStats() {
   const tc = g('pom-today-count'); if (tc) tc.textContent = DB.pomodoro.todayCount||0;
@@ -8108,6 +8160,26 @@ function gpaAddRow(course) {
   if (!DB.gpa.rows) DB.gpa.rows = [];
   DB.gpa.rows.push(course || { name:'', grade:'A', credits:3, type:'Regular' });
   save(); renderGPA();
+}
+// The GPA Calculator was entirely manual entry — course name, letter grade,
+// credits — completely disconnected from the marks already sitting in Grade
+// Book, so a real average had to be re-typed as a guessed letter grade.
+// This pulls current course averages straight in using the same
+// percentage→letter mapping the GPA scale reference already displays.
+function gpaImportFromGradebook() {
+  const withMarks = DB.courses.filter(c => courseAvg(c.name) !== null);
+  if (!withMarks.length) { toast('No graded courses yet — log marks in Grade Book first!'); return; }
+  if (!DB.gpa) DB.gpa = { rows: [] };
+  if (!DB.gpa.rows) DB.gpa.rows = [];
+  let added = 0, updated = 0;
+  withMarks.forEach(c => {
+    const letter = GPA_PCT_TO_LETTER(courseAvg(c.name));
+    const existing = DB.gpa.rows.find(r => r.name === c.name);
+    if (existing) { existing.grade = letter; updated++; }
+    else { DB.gpa.rows.push({ name: c.name, grade: letter, credits: 3, type: 'Regular' }); added++; }
+  });
+  save(); renderGPA();
+  toast(`⇩ Imported ${added} course${added===1?'':'s'}${updated?`, updated ${updated}`:''} from Gradebook`);
 }
 function gpaRemoveRow(i) {
   DB.gpa.rows.splice(i,1); save(); renderGPA();
@@ -8909,6 +8981,7 @@ function fcAnswer(ease) {
     fcRateCard(card, ease);
     DB.flashcards.reviewLog.push({ ts: Date.now(), deckId: card.deckId, ease });
     if (DB.flashcards.reviewLog.length > 3000) DB.flashcards.reviewLog = DB.flashcards.reviewLog.slice(-3000);
+    markStreakToday();
     save();
   }
   fcStudyIdx++; fcFlipped = false; fcShowCard();
@@ -9200,7 +9273,8 @@ function examToggleTask(examId, taskId){
     if (t) { t.done = !t.done; newDone = t.done; break; }
   }
   if (newDone !== null) (DB.planner||[]).forEach(p=>{ if (p.examId===examId && p.examTaskId===taskId) p.done=newDone; });
-  save(); examRender(); renderDExam(); renderPlanner();
+  if (newDone === true) markStreakToday();
+  save(); examRender(); renderDExam(); renderPlanner(); renderStreak();
 }
 // Jumps to the Exam Planner and expands the given exam's card, used by
 // links from the Weekly Planner so study tasks and exams stay one click apart.
@@ -9251,6 +9325,7 @@ function examCardHTML(ex, isPast){
         <div style="font-size:11.5px;color:var(--ink4);margin-top:2px">${dateLabel}${ex.time?' · '+escapeHtml(ex.time):''}${ex.location?' · '+escapeHtml(ex.location):''}${ex.window?' · '+ex.window+'-day plan':''}</div>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
+        <button class="btn bo sm" onclick="pomFocusOn('${ex.course.replace(/'/g,"\\'")}')" title="Start a focus session for this course">🍅</button>
         <button class="btn bo sm" onclick="examOpenEdit('${ex.id}')">✏️</button>
         <button class="btn bd sm" onclick="examDelete('${ex.id}')">🗑</button>
       </div>
