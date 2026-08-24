@@ -998,6 +998,15 @@ img{max-width:100%}
 .wp-item-x:hover{color:var(--red)}
 .wp-empty{color:var(--ink4);font-size:11px;text-align:center;padding:10px 0}
 .wp-check input{accent-color:var(--ac);margin-top:2px;cursor:pointer}
+.wp-exam-strip{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.wp-exam-chip{display:flex;flex-direction:column;gap:2px;padding:7px 10px;border-radius:9px;background:var(--s2);cursor:pointer;font-size:11px;font-weight:700;transition:background .15s,color .15s}
+.wp-exam-chip:hover{background:var(--acll);color:var(--ac)}
+.wp-exam-chip-meta{font-size:9.5px;font-weight:600;color:var(--ink4)}
+.wp-col-exam{margin:6px 7px 0;padding:4px 7px;border-radius:7px;background:var(--acll);color:var(--ac);font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wp-col-exam:hover{text-decoration:underline}
+.wp-item-examlink{color:var(--ac);font-weight:700;cursor:pointer}
+.wp-item-examname{color:var(--ac);font-weight:800;cursor:pointer}
+.wp-item-examname:hover{text-decoration:underline}
 @media(max-width:1100px){.wp-board{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}}
 
 /* ══════════════════════ GRADE GOALS ══════════════════════ */
@@ -1620,9 +1629,11 @@ document.addEventListener('DOMContentLoaded',function(){
               <button class="btn bo sm" onclick="wpNav(0)">This Week</button>
               <button class="btn bo sm" onclick="wpNav(1)" title="Next week">→</button>
               <button class="btn bo sm" onclick="wpCarryOver()" title="Move unfinished items to next week">↷ Carry Over</button>
+              <button class="btn bp sm" onclick="wpSyncAllExams()" title="Pull study tasks from every upcoming exam into their weeks">🎯 Sync All Exams</button>
               <button class="btn bp sm" onclick="showMo('mo-plan')">+ Add Item</button>
             </div>
           </div>
+          <div id="wp-exam-strip" class="wp-exam-strip" style="display:none"></div>
           <div id="wp-board" class="wp-board"></div>
         </div>
 
@@ -2281,7 +2292,7 @@ document.addEventListener('DOMContentLoaded',function(){
             </div>
             <div class="set-sec"><h3>⏳ Exam Planner</h3>
               <div class="set-row"><label>Total exams<small>Click to manage exams &amp; study plans</small></label><button class="btn bo sm" onclick="go('exams')">Open Exam Planner →</button></div>
-              <div class="set-row"><label>Reset study progress<small>Unchecks all study plan tasks on every exam</small></label><button class="btn bd sm" onclick="showConfirm('Reset all exam study progress?',()=>{(DB.exams||[]).forEach(e=>(e.plan||[]).forEach(d=>(d.tasks||[]).forEach(t=>t.done=false)));save();examRender();toast('Study progress reset');},'Reset')">Reset Progress</button></div>
+              <div class="set-row"><label>Reset study progress<small>Unchecks all study plan tasks on every exam</small></label><button class="btn bd sm" onclick="showConfirm('Reset all exam study progress?',()=>{(DB.exams||[]).forEach(e=>(e.plan||[]).forEach(d=>(d.tasks||[]).forEach(t=>t.done=false)));(DB.planner||[]).forEach(p=>{if(p.examId)p.done=false;});save();examRender();renderPlanner();toast('Study progress reset');},'Reset')">Reset Progress</button></div>
               <div class="set-row"><label>Clear all exams<small>Deletes every exam and its study plan</small></label><button class="btn bd sm" onclick="examClearAll()">Clear Exams</button></div>
             </div>
             <div class="set-sec"><h3>📊 GPA Settings</h3>
@@ -2578,6 +2589,7 @@ document.addEventListener('DOMContentLoaded',function(){
                 <div class="ins-dd-lbl">Study tools</div>
                 <div class="ins-dd-grid">
                   <button class="ins-dd-item" onclick="insFlashcard()">🃏 Flashcard</button>
+                  <button class="ins-dd-item" onclick="sendSelToFlashcards()" title="Turns the text you've highlighted into a real card in your Flashcards deck">📤 Selection → Deck</button>
                   <button class="ins-dd-item" onclick="insRubric()">🧾 Rubric</button>
                   <button class="ins-dd-item" onclick="insTimeline()">📍 Timeline</button>
                   <button class="ins-dd-item" onclick="insSteps()">🪜 Steps</button>
@@ -4232,14 +4244,46 @@ function wtdFlashcardCandidates() {
   }).filter(Boolean);
 }
 
+// Grade goals live entirely on their own page (courseAvg vs gl.target) with
+// no link to the daily task recommender — a course can be quietly slipping
+// behind its goal for weeks and never surface here unless it also happens to
+// have homework or an exam due. This closes that gap: a goal that's
+// meaningfully behind target becomes its own "catch up" candidate, weighted
+// by how far behind it is and, if a deadline is set, how close that is.
+function wtdGoalCandidates() {
+  const goals = DB.goals || [];
+  return goals.map(gl => {
+    const avg = courseAvg(gl.course);
+    if (avg === null) return null; // no marks logged yet — nothing actionable to recommend
+    const gap = gl.target - avg;
+    if (gap < 2) return null; // on track or only trivially behind — don't nag
+    const days = gl.deadline ? dLeft(gl.deadline) : null;
+    let urgency = Math.min(10 + gap * 2, 60);
+    if (days !== null) {
+      if (days < 0) urgency += 25;
+      else if (days <= 3) urgency += 30;
+      else if (days <= 7) urgency += 18;
+      else if (days <= 14) urgency += 8;
+    }
+    const score = urgency;
+    const urgencyLevel = score > 55 ? 'high' : score > 30 ? 'med' : 'low';
+    const c = DB.courses.find(c => c.name === gl.course);
+    const reason = days !== null
+      ? `Your ${gl.course} average is ${gap.toFixed(1)}% below your ${gl.target}% goal, ${days < 0 ? 'and the deadline has passed' : `with ${days} day${days === 1 ? '' : 's'} left`}.`
+      : `Your ${gl.course} average is ${gap.toFixed(1)}% below your ${gl.target}% goal.`;
+    return { type: 'goal', id: gl.id, title: `Catch up in ${gl.course}`, score, urgencyLevel, reason, estMin: 25,
+      dueLabel: days !== null ? (days < 0 ? 'Past deadline' : dueFmt(gl.deadline)) : `${avg.toFixed(1)}% avg`, color: c?.color || 'var(--ac)' };
+  }).filter(Boolean);
+}
+
 function computeWhatToDo() {
-  const all = [...wtdHwCandidates(), ...wtdExamCandidates(), ...wtdFlashcardCandidates()];
+  const all = [...wtdHwCandidates(), ...wtdExamCandidates(), ...wtdFlashcardCandidates(), ...wtdGoalCandidates()];
   if (!all.length) return { top: null, others: [] };
   all.sort((a, b) => b.score - a.score);
   return { top: all[0], others: all.slice(1, 4) };
 }
 
-const WTD_TYPE_LABEL = { hw: '📚 Homework', exam: '📝 Exam Prep', fc: '🃏 Flashcards' };
+const WTD_TYPE_LABEL = { hw: '📚 Homework', exam: '📝 Exam Prep', fc: '🃏 Flashcards', goal: '🏆 Goal Catch-up' };
 
 function openWhatNow() {
   const result = computeWhatToDo();
@@ -4278,6 +4322,8 @@ function wtdGoToTask() {
   } else if (wtdCurrent.type === 'fc') {
     go('flashcards');
     fcStartStudy(wtdCurrent.id);
+  } else if (wtdCurrent.type === 'goal') {
+    go('goals');
   }
 }
 function hwRow(h) {
@@ -4434,6 +4480,41 @@ function relTime(iso) {
   return new Date(iso).toLocaleDateString('en-CA',{month:'short',day:'numeric'});
 }
 function gSearch(v){if(!v)return;go('notes');renderNotesList(v);}
+
+// Bridges Notes and Flashcards, which otherwise never talk to each other:
+// insFlashcard() only drops a decorative flip-card <div> into the note's
+// HTML, and nothing in the real Flashcards module (DB.flashcards) ever
+// reads a note. This takes the highlighted text, guesses a question/answer
+// split, and files it as an actual scheduled card in the deck for that
+// note's course — creating that deck on first use, same as a course-linked
+// deck made by hand in the Flashcards page.
+function sendSelToFlashcards(){
+  if (!noteId) { toast('Open a note first!'); return; }
+  const n = DB.notes.find(x=>x.id===noteId); if (!n) return;
+  const sel = window.getSelection().toString().trim();
+  if (!sel) { toast('Highlight some text in the note first!'); return; }
+  let q, a;
+  const qMark = sel.indexOf('?');
+  if (qMark > 0 && qMark < sel.length - 1) {
+    q = sel.slice(0, qMark + 1).trim();
+    a = sel.slice(qMark + 1).trim();
+  } else {
+    const m = sel.match(/^(.{2,80}?)\s*[-–—:]\s+(.+)$/s);
+    if (m) { q = m[1].trim(); a = m[2].trim(); }
+    else { q = n.title || 'Untitled note'; a = sel; }
+  }
+  if (!DB.flashcards) DB.flashcards = { decks: [], cards: [] };
+  let deck = (DB.flashcards.decks||[]).find(d => d.courseId === (n.course||''));
+  if (!deck) {
+    const c = DB.courses.find(c=>c.name===n.course);
+    deck = { id:'deck'+Date.now(), name:(n.course||'General')+' (from Notes)', desc:'Auto-created from note highlights', color:c?.color||'#0F6B30', courseId:n.course||'', created:Date.now() };
+    DB.flashcards.decks.push(deck);
+  }
+  const card = { id:'fc'+Date.now()+Math.floor(Math.random()*1000), deckId:deck.id, q, a, hint:'', created:Date.now(), reviews:0, ease:2.5, sourceNoteId:n.id };
+  DB.flashcards.cards.push(card);
+  save();
+  toast(`🃏 Added to "${deck.name}"`);
+}
 
 /* ── EDITOR COMMANDS ── */
 function autoResize(el){if(!el)return;el.style.height="auto";el.style.height=el.scrollHeight+"px";}
@@ -5694,14 +5775,82 @@ function wpSave(){
   DB.planner.push({id:'wp'+Date.now(), week:wpWeekKey(wpWeekOffset), day:+g('wp-day').value, text, course:g('wp-co').value||'', pr:+g('wp-pr').value||0, done:false});
   save(); closeMo('mo-plan'); g('wp-tx').value=''; renderPlanner(); toast('Added to planner!');
 }
-function wpToggle(id){ const it=(DB.planner||[]).find(i=>i.id===id); if(it){ it.done=!it.done; save(); renderPlanner(); } }
+function wpToggle(id){
+  const it=(DB.planner||[]).find(i=>i.id===id); if(!it) return;
+  it.done=!it.done;
+  if (it.examId && it.examTaskId) {
+    const ex=(DB.exams||[]).find(e=>e.id===it.examId);
+    if (ex) for (const day of (ex.plan||[])) { const t=(day.tasks||[]).find(x=>x.id===it.examTaskId); if (t) { t.done=it.done; break; } }
+  }
+  save(); renderPlanner();
+}
+function wpWeekKeyForDate(dateStr){ return wpMonday(new Date(dateStr+'T00:00:00')).toISOString().slice(0,10); }
+function wpDayIndexForDate(dateStr){ return (new Date(dateStr+'T00:00:00').getDay()+6)%7; }
+// Pulls an exam's study-plan tasks into the Weekly Planner, placed on the
+// correct week/day for each task's date. Safe to call repeatedly — tasks
+// already linked (by examTaskId) are skipped. Pass silent=true to batch
+// several exams into one save/toast (see wpSyncAllExams).
+function examSyncPlanner(examId, silent){
+  const ex=(DB.exams||[]).find(e=>e.id===examId); if(!ex) return 0;
+  if(!DB.planner) DB.planner=[];
+  const already=new Set(DB.planner.filter(p=>p.examId===examId).map(p=>p.examTaskId));
+  let added=0;
+  (ex.plan||[]).forEach(day=>{
+    (day.tasks||[]).forEach(t=>{
+      if(already.has(t.id)) return;
+      DB.planner.push({
+        id:'wpx'+t.id, week:wpWeekKeyForDate(day.date), day:wpDayIndexForDate(day.date),
+        text:`⏳ ${t.text}`, course:ex.course, pr:(ex.pri??1)>=2?1:0, done:!!t.done,
+        examId:ex.id, examTaskId:t.id
+      });
+      added++;
+    });
+  });
+  if(!silent){
+    save(); if(g('wp-board')) renderPlanner();
+    toast(added?`Added ${added} study task${added===1?'':'s'} to Weekly Planner`:'Already synced — nothing new to add');
+  }
+  return added;
+}
+function wpSyncAllExams(){
+  const exams=(DB.exams||[]).filter(e=>dLeft(e.date)>=0);
+  if(!exams.length){ toast('No upcoming exams to sync'); return; }
+  let added=0; exams.forEach(ex=>{ added+=examSyncPlanner(ex.id,true); });
+  save(); renderPlanner();
+  toast(added?`Added ${added} study task${added===1?'':'s'} from ${exams.length} exam${exams.length===1?'':'s'}`:'Already synced — nothing new to add');
+}
 function wpDel(id){ DB.planner=(DB.planner||[]).filter(i=>i.id!==id); save(); renderPlanner(); }
 function wpCarryOver(){
   const week=wpWeekKey(wpWeekOffset), nextWeek=wpWeekKey(wpWeekOffset+1);
   const unfinished=(DB.planner||[]).filter(i=>i.week===week && !i.done);
   if(!unfinished.length){ toast('Nothing to carry over!'); return; }
-  unfinished.forEach(i=>{ i.week=nextWeek; });
-  save(); renderPlanner(); toast(`Carried ${unfinished.length} item(s) to next week`);
+
+  const doCarry=()=>{
+    unfinished.forEach(i=>{ i.week=nextWeek; });
+    save(); renderPlanner(); toast(`Carried ${unfinished.length} item(s) to next week`);
+  };
+
+  // If an unfinished item is tied to an exam, carrying it over only makes
+  // sense if it'll still land BEFORE that exam. If the day it'd land on is
+  // on/after the exam date, the exam will already be over by then — flag it
+  // instead of silently scheduling study time for a test that's already happened.
+  const nextMonday=new Date(nextWeek+'T00:00:00');
+  const overlapping=[];
+  unfinished.forEach(i=>{
+    if(!i.examId) return;
+    const ex=(DB.exams||[]).find(e=>e.id===i.examId); if(!ex) return;
+    const landDate=new Date(nextMonday); landDate.setDate(landDate.getDate()+i.day);
+    if(examIsoDate(landDate) >= ex.date) overlapping.push(ex);
+  });
+
+  if(overlapping.length){
+    const names=[...new Set(overlapping.map(ex=>`${ex.title} (${ex.course})`))];
+    const plural=overlapping.length===1;
+    const msg=`⚠️ ${overlapping.length} study task${plural?'':'s'} you're carrying over ${plural?'is':'are'} for ${names.join(', ')} — that exam will already be over by the day ${plural?'it lands':'they land'} next week. Carry over anyway?`;
+    showConfirm(msg, doCarry, 'Carry Over Anyway');
+  } else {
+    doCarry();
+  }
 }
 function renderPlanner(){
   const board=g('wp-board'); if(!board) return;
@@ -5711,18 +5860,38 @@ function renderPlanner(){
   const rangeEl=g('wp-range');
   if(rangeEl) rangeEl.textContent = monday.toLocaleDateString('en-CA',{month:'short',day:'numeric'})+' – '+sunday.toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'})+(wpWeekOffset===0?' · This week':'');
   const items=(DB.planner||[]).filter(i=>i.week===week);
+  const monIso=examIsoDate(monday), sunIso=examIsoDate(sunday);
+  const weekExams=(DB.exams||[]).filter(e=>e.date>=monIso && e.date<=sunIso).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const stripEl=g('wp-exam-strip');
+  if(stripEl){
+    stripEl.style.display = weekExams.length ? 'flex' : 'none';
+    stripEl.innerHTML = weekExams.map(ex=>{
+      const d=dLeft(ex.date), dayLbl = d===0?'Today':d===1?'Tomorrow':new Date(ex.date+'T00:00:00').toLocaleDateString('en-CA',{weekday:'short'});
+      const typeIc = EXAM_TYPE_IC[ex.type]||'📝';
+      return `<div class="wp-exam-chip" style="border-left:3px solid ${ex.ccolor||'var(--ac)'}" onclick="examOpenAndExpand('${ex.id}')">
+        <span>${typeIc} ${escapeHtml(ex.title)}</span><span class="wp-exam-chip-meta">${escapeHtml(ex.course)} · ${dayLbl}</span>
+      </div>`;
+    }).join('');
+  }
   board.innerHTML = WP_DAYS.map((label,idx)=>{
     const dayDate=new Date(monday); dayDate.setDate(dayDate.getDate()+idx);
     const isToday = dayDate.toDateString()===new Date().toDateString();
     const dayItems = items.filter(i=>i.day===idx).sort((a,b)=>(b.pr-a.pr));
+    const dayExams = weekExams.filter(e=>e.date===examIsoDate(dayDate));
+    const dayBadgeIc = dayExams.length>1 ? '🗓️' : (dayExams.length ? (EXAM_TYPE_IC[dayExams[0].type]||'📝') : '');
+    const examBadge = dayExams.length ? `<div class="wp-col-exam" title="${escapeHtml(dayExams.map(e=>e.title).join(', '))}" onclick="examOpenAndExpand('${dayExams[0].id}')">${dayBadgeIc} ${dayExams.length>1?dayExams.length+' exams':escapeHtml(dayExams[0].title)}</div>` : '';
     return `<div class="wp-col ${isToday?'wp-today':''}">
       <div class="wp-col-hd"><span>${label}</span><span class="wp-col-date">${dayDate.getDate()}</span></div>
-      <div class="wp-col-body">${dayItems.length?dayItems.map(i=>`
+      ${examBadge}
+      <div class="wp-col-body">${dayItems.length?dayItems.map(i=>{
+        const linkedExam = i.examId ? (DB.exams||[]).find(e=>e.id===i.examId) : null;
+        return `
         <div class="wp-item ${i.done?'done':''}">
           <label class="wp-check"><input type="checkbox" ${i.done?'checked':''} onchange="wpToggle('${i.id}')"/></label>
-          <div class="wp-item-txt">${i.pr?'⭐ ':''}${i.text}${i.course?`<div class="wp-item-co">${i.course}</div>`:''}</div>
+          <div class="wp-item-txt">${i.pr?'⭐ ':''}${linkedExam?`<span class="wp-item-examname" onclick="examOpenAndExpand('${linkedExam.id}')" title="Open ${escapeHtml(linkedExam.title)} in Exam Planner">${EXAM_TYPE_IC[linkedExam.type]||'📝'} ${escapeHtml(linkedExam.title)}</span> — `:''}${i.text.replace(/^⏳\s*/,'')}${i.course?`<div class="wp-item-co">${escapeHtml(i.course)}</div>`:''}</div>
           <button class="wp-item-x" onclick="wpDel('${i.id}')">✕</button>
-        </div>`).join(''):'<div class="wp-empty">—</div>'}</div>
+        </div>`;
+      }).join(''):'<div class="wp-empty">—</div>'}</div>
     </div>`;
   }).join('');
 }
@@ -8971,6 +9140,10 @@ async function examSave(){
 
   const old = existingIdx>=0 ? DB.exams[existingIdx] : null;
   if (old) examMergePlanProgress(old.plan, plan);
+  // Study-plan tasks regenerate with new ids on every save, so any tasks
+  // already pushed to the Weekly Planner would otherwise go stale/unlinked.
+  const hadLinkedPlannerItems = old ? (DB.planner||[]).some(p=>p.examId===id) : false;
+  if (old) DB.planner = (DB.planner||[]).filter(p=>p.examId!==id);
   const exam = {
     id, course, ccolor: c?c.color:'#0F6B30', title, date,
     type: examType, pri: +(g('exam-pri')?.value ?? 1), window,
@@ -8982,7 +9155,8 @@ async function examSave(){
   if (!DB.exams) DB.exams = [];
   if (existingIdx>=0) DB.exams[existingIdx]=exam; else DB.exams.push(exam);
   examSyncCalendarEvent(exam);
-  save(); closeMo('mo-exam'); examRender(); renderDExam(); toast('Exam saved!');
+  save(); closeMo('mo-exam'); examRender(); renderDExam(); renderPlanner();
+  toast(hadLinkedPlannerItems ? 'Exam saved! Re-sync to refresh its Weekly Planner tasks.' : 'Exam saved!');
 }
 function examSyncCalendarEvent(exam){
   if (!DB.calendar) DB.calendar = buildDefaultCalendar();
@@ -9005,25 +9179,36 @@ function examDelete(id){
     const ex = (DB.exams||[]).find(e=>e.id===id);
     if (ex && ex.calEventId && DB.calendar) DB.calendar.events = (DB.calendar.events||[]).filter(e=>e.id!==ex.calEventId);
     DB.exams = (DB.exams||[]).filter(e=>e.id!==id);
+    DB.planner = (DB.planner||[]).filter(p=>p.examId!==id);
     examExpandedIds.delete(id);
-    save(); examRender(); renderDExam(); toast('Exam deleted');
+    save(); examRender(); renderDExam(); renderPlanner(); toast('Exam deleted');
   });
 }
 function examClearAll(){
   showConfirm('Delete ALL exams and their study plans? This cannot be undone.', () => {
     const ids = (DB.exams||[]).map(e=>e.calEventId).filter(Boolean);
     if (DB.calendar) DB.calendar.events = (DB.calendar.events||[]).filter(e=>!ids.includes(e.id));
-    DB.exams = []; examExpandedIds.clear();
-    save(); examRender(); renderDExam(); toast('All exams cleared');
+    DB.exams = []; DB.planner = (DB.planner||[]).filter(p=>!p.examId); examExpandedIds.clear();
+    save(); examRender(); renderDExam(); renderPlanner(); toast('All exams cleared');
   });
 }
 function examToggleTask(examId, taskId){
   const ex = (DB.exams||[]).find(e=>e.id===examId); if (!ex) return;
+  let newDone = null;
   for (const day of (ex.plan||[])) {
     const t = (day.tasks||[]).find(x=>x.id===taskId);
-    if (t) { t.done = !t.done; break; }
+    if (t) { t.done = !t.done; newDone = t.done; break; }
   }
-  save(); examRender(); renderDExam();
+  if (newDone !== null) (DB.planner||[]).forEach(p=>{ if (p.examId===examId && p.examTaskId===taskId) p.done=newDone; });
+  save(); examRender(); renderDExam(); renderPlanner();
+}
+// Jumps to the Exam Planner and expands the given exam's card, used by
+// links from the Weekly Planner so study tasks and exams stay one click apart.
+function examOpenAndExpand(id){
+  go('exams');
+  if (!examExpandedIds.has(id)) examExpandedIds.add(id);
+  examRender();
+  setTimeout(()=>{ const card=document.querySelector(`[data-exam-id="${id}"]`); if (card) card.scrollIntoView({behavior:'smooth',block:'center'}); }, 50);
 }
 function examToggleExpand(id){
   if (examExpandedIds.has(id)) examExpandedIds.delete(id); else examExpandedIds.add(id);
@@ -9053,7 +9238,7 @@ function examCardHTML(ex, isPast){
   const expanded = examExpandedIds.has(ex.id);
   const dateLabel = new Date(ex.date+'T00:00:00').toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric'});
   const pri = EXAM_PRI[ex.pri??1], typeIc = EXAM_TYPE_IC[ex.type]||'📝';
-  return `<div class="card" style="margin-bottom:12px;border-left:4px solid ${ex.ccolor||'var(--ac)'}">
+  return `<div class="card" data-exam-id="${ex.id}" style="margin-bottom:12px;border-left:4px solid ${ex.ccolor||'var(--ac)'}">
     <div style="display:flex;gap:10px;align-items:flex-start;cursor:pointer" onclick="examToggleExpand('${ex.id}')">
       <div style="flex:1;min-width:0">
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px">
@@ -9100,7 +9285,9 @@ function examDetailHTML(ex){
   const hwHTML = hwList.length ? hwList.map(hwRow).join('') : '<span style="font-size:11.5px;color:var(--ink4)">No pending homework for this course</span>';
 
   return `<div style="border-top:1px solid var(--bor);margin-top:10px;padding-top:12px">
-    <div class="sec-lbl" style="margin-bottom:8px">📅 Study Plan</div>
+    <div class="sec-lbl" style="margin-bottom:8px;display:flex;align-items:center;gap:8px">📅 Study Plan
+      <button class="btn bo sm" style="margin-left:auto" onclick="event.stopPropagation();examSyncPlanner('${ex.id}')" title="Push these study tasks into the Weekly Planner">🗂️ Sync to Planner</button>
+    </div>
     ${planHTML}
     <div class="sec-lbl" style="margin:14px 0 8px">🔗 Related Notes &amp; Flashcards</div>
     <div style="font-size:10.5px;font-weight:800;color:var(--ink4);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Notes</div>
