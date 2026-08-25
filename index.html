@@ -2137,7 +2137,7 @@ document.addEventListener('DOMContentLoaded',function(){
                 <button class="btn bo sm" onclick="exportData()">⬇ Export data (JSON)</button>
                 <button class="btn bo sm" onclick="cloudSaveNow();toast('Manual sync triggered')">☁ Force cloud sync now</button>
                 <button class="btn bo sm" onclick="seedYCDSBCalendar();toast('School calendar re-checked')">🗓 Re-seed school calendar</button>
-                <button class="btn bd sm" onclick="if(confirm('Erase ALL local data on this device? This cannot be undone.')){localStorage.clear();location.reload();}">🗑 Wipe local data</button>
+                <button class="btn bd sm" onclick="showConfirm('Erase ALL local data on this device? This cannot be undone.',()=>{localStorage.clear();location.reload();},'Wipe')">🗑 Wipe local data</button>
               </div>
             </div>
             <button class="btn bg sm" onclick="localStorage.removeItem('scholr_admin');go('dashboard');toast('Exited admin mode')">← Exit admin mode</button>
@@ -2296,7 +2296,7 @@ document.addEventListener('DOMContentLoaded',function(){
             </div>
             <div class="set-sec"><h3>🃏 Flashcards</h3>
               <div class="set-row"><label>Total decks<small>Click to manage your decks</small></label><button class="btn bo sm" onclick="go('flashcards')">Open Flashcards →</button></div>
-              <div class="set-row"><label>Reset study progress<small>Clears ease ratings on all cards</small></label><button class="btn bd sm" onclick="if(confirm('Reset all flashcard study data?')){(DB.flashcards.cards||[]).forEach(c=>{c.ease=2.5;c.reviews=0;c.interval=0;c.nextReview=null;c.lastReviewed=null;});save();toast('Study data reset');}">Reset Progress</button></div>
+              <div class="set-row"><label>Reset study progress<small>Clears ease ratings on all cards</small></label><button class="btn bd sm" onclick="showConfirm('Reset all flashcard study data?',()=>{(DB.flashcards.cards||[]).forEach(c=>{c.ease=2.5;c.reviews=0;c.interval=0;c.nextReview=null;c.lastReviewed=null;});save();toast('Study data reset');},'Reset')">Reset Progress</button></div>
             </div>
             <div class="set-sec"><h3>⏳ Exam Planner</h3>
               <div class="set-row"><label>Total exams<small>Click to manage exams &amp; study plans</small></label><button class="btn bo sm" onclick="go('exams')">Open Exam Planner →</button></div>
@@ -2304,7 +2304,7 @@ document.addEventListener('DOMContentLoaded',function(){
               <div class="set-row"><label>Clear all exams<small>Deletes every exam and its study plan</small></label><button class="btn bd sm" onclick="examClearAll()">Clear Exams</button></div>
             </div>
             <div class="set-sec"><h3>📊 GPA Settings</h3>
-              <div class="set-row"><label>Clear GPA courses<small>Remove all GPA calculator entries</small></label><button class="btn bd sm" onclick="if(confirm('Clear GPA data?')){DB.gpa={rows:[]};save();toast('GPA cleared');}">Clear GPA</button></div>
+              <div class="set-row"><label>Clear GPA courses<small>Remove all GPA calculator entries</small></label><button class="btn bd sm" onclick="showConfirm('Clear GPA data?',()=>{DB.gpa={rows:[]};save();toast('GPA cleared');},'Clear')">Clear GPA</button></div>
             </div>
           </div>
           <div class="set-p" id="sp-sidebar">
@@ -2893,7 +2893,7 @@ document.addEventListener('DOMContentLoaded',function(){
   <p style="font-size:12px;color:var(--ink3);margin-bottom:10px">Temporary notes — saved locally, not attached to any note.</p>
   <textarea id="scratch-area" style="width:100%;min-height:320px;background:var(--s2);border:1.5px solid var(--bor);border-radius:var(--rad);padding:14px;font-family:var(--font);font-size:13.5px;line-height:1.7;resize:vertical;outline:none;color:var(--ink);transition:border-color .15s" placeholder="Jot anything here… it auto-saves." oninput="saveScratch()"></textarea>
   <div class="mdl-acts">
-    <button class="btn bd sm" onclick="if(confirm('Clear scratch pad?')){g('scratch-area').value='';saveScratch();}">🗑 Clear</button>
+    <button class="btn bd sm" onclick="showConfirm('Clear scratch pad?',()=>{g('scratch-area').value='';saveScratch();},'Clear')">🗑 Clear</button>
     <button class="btn bo sm" onclick="copyScratch()">📋 Copy All</button>
     <button class="btn bp sm" onclick="scratchToNote()">📝 Save as Note</button>
     <button class="btn bo sm" onclick="createStickyFromScratch()">📌 Create Sticky</button>
@@ -3194,11 +3194,11 @@ document.addEventListener('DOMContentLoaded',function(){
   <input id="focus-task-input" placeholder="What are you focusing on?" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:10px;padding:10px 16px;font-size:13px;font-family:var(--font);outline:none;width:300px;text-align:center" oninput="document.getElementById('focus-task-lbl').textContent=this.value||'Focused on your work'"/>
   <!-- Ambient sound -->
   <div style="display:flex;gap:8px;margin-top:4px">
-    <button onclick="toggleAmbient('rain')" class="amb-btn" id="amb-rain" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:var(--font)">🌧️ Rain</button>
-    <button onclick="toggleAmbient('cafe')" class="amb-btn" id="amb-cafe" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:var(--font)">☕ Café</button>
-    <button onclick="toggleAmbient('nature')" class="amb-btn" id="amb-nature" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:var(--font)">🌿 Nature</button>
-    <button onclick="toggleAmbient('white')" class="amb-btn" id="amb-white" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:var(--font)">⬜ White</button>
-    <button onclick="toggleAmbient('lofi')" class="amb-btn" id="amb-lofi" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:var(--font)">🎵 Lofi</button>
+    <button onclick="toggleAmbient('rain')" class="amb-btn" id="amb-rain" data-amb="rain" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:var(--font)">🌧️ Rain</button>
+    <button onclick="toggleAmbient('cafe')" class="amb-btn" id="amb-cafe" data-amb="cafe" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:var(--font)">☕ Café</button>
+    <button onclick="toggleAmbient('nature')" class="amb-btn" id="amb-nature" data-amb="nature" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:var(--font)">🌿 Nature</button>
+    <button onclick="toggleAmbient('white')" class="amb-btn" id="amb-white" data-amb="white" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:var(--font)">⬜ White</button>
+    <button onclick="toggleAmbient('lofi')" class="amb-btn" id="amb-lofi" data-amb="lofi" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:var(--font)">🎵 Lofi</button>
   </div>
 </div>
 
@@ -5370,7 +5370,7 @@ function ttEditSlot(dn,si,e){
   }
   showMo('mo-cls');
 }
-function clearTT(){if(confirm('Clear all days?')){DB.schedule={dayNum:1,days:{}};save();renderTT();}}
+function clearTT(){showConfirm('Clear all days?',()=>{DB.schedule={dayNum:1,days:{}};save();renderTT();},'Clear');}
 
 /* ── DAY PLAN — Day-number system (not calendar dates) ── */
 function dpInit(){
@@ -5714,13 +5714,33 @@ function markStreakToday(){
   if(!DB.streak.includes(dk)){ DB.streak.push(dk); return true; }
   return false;
 }
+// Also used by the (optional, bonus-code-unlocked) floating streak badge,
+// defined later in the file — kept here, ahead of renderStreak, so both
+// always read the exact same count regardless of script load order.
+function getStreakCount(){
+  const today = new Date(), streak = DB.streak || [];
+  let cnt = 0;
+  for (let i = 0; ; i++) {
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    if (streak.includes(d.toISOString().slice(0, 10))) cnt++; else break;
+  }
+  return cnt;
+}
+function updateStreakBadge(cnt){
+  const badge = g('bonus-streak-badge');
+  if (badge) badge.textContent = '🔥 ' + cnt + ' day streak';
+}
 function renderStreak(){
-  const grid=g('sg'); if(!grid) return;
-  const today=new Date(), streak=DB.streak||[]; let cnt=0;
-  grid.innerHTML='';
-  for(let i=27;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);const dk=d.toISOString().slice(0,10);const isToday=i===0,done=streak.includes(dk);const div=document.createElement('div');div.className=`s-day ${done?'done':isToday?'today':'empty'}`;div.title=dk;grid.appendChild(div);}
-  for(let i=0;;i++){const d=new Date(today);d.setDate(d.getDate()-i);const dk=d.toISOString().slice(0,10);if(streak.includes(dk))cnt++;else break;}
+  const streak=DB.streak||[];
+  const grid=g('sg');
+  if(grid){
+    const today=new Date();
+    grid.innerHTML='';
+    for(let i=27;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);const dk=d.toISOString().slice(0,10);const isToday=i===0,done=streak.includes(dk);const div=document.createElement('div');div.className=`s-day ${done?'done':isToday?'today':'empty'}`;div.title=dk;grid.appendChild(div);}
+  }
+  const cnt = getStreakCount();
   setText('dp-sv',cnt);
+  updateStreakBadge(cnt); // same number shown here and on the floating streak badge (if unlocked)
 }
 
 /* ── HW EDIT ── */
@@ -6075,13 +6095,19 @@ function collectHWFields(id){const c=g(id); if(!c)return[]; return Array.from(c.
 
 /* ── DATA ── */
 function clearD(t){
-  if(!confirm(`Clear all ${t}?`)) return;
-  if(t==='hw') DB.hw=[];
-  if(t==='notes'){DB.notes=[];noteId=null;}
-  if(t==='grades') DB.grades=[];
-  save(); renderAll(); toast(`${t} cleared`);
+  showConfirm(`Clear all ${t}?`, () => {
+    if(t==='hw') DB.hw=[];
+    if(t==='notes'){DB.notes=[];noteId=null;}
+    if(t==='grades') DB.grades=[];
+    save(); renderAll(); toast(`${t} cleared`);
+  }, 'Clear');
 }
-function resetAll(){if(!confirm('Reset everything? This cannot be undone.'))return;localStorage.removeItem(KEY);location.reload();}
+function resetAll(){
+  showConfirm('Reset everything? This cannot be undone.', () => {
+    localStorage.removeItem(KEY);
+    location.reload();
+  }, 'Reset');
+}
 
 /* ── EDITOR CUSTOMIZATION ── */
 function setDocW(v){document.documentElement.style.setProperty('--doc-w',v+'px');DB.p.docW=v;save();}
@@ -6433,9 +6459,25 @@ function handleDataDrop(ev){
   };
   r.readAsText(file);
 }
+// Stickies, the scratchpad, and AI chat history all live in their own plain
+// localStorage keys rather than inside DB, which meant a full backup/restore
+// silently left them behind. exportData/importData now carry them along as
+// an "_extras" bundle so a restore actually brings everything back.
+const BACKUP_EXTRA_KEYS = ['scholr_stickies', 'scholr_scratch', 'scholr_ai_chat_history'];
+function collectBackupExtras(){
+  const extras = {};
+  BACKUP_EXTRA_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v != null) extras[k] = v; });
+  return extras;
+}
+function restoreBackupExtras(extras){
+  if (!extras) return;
+  BACKUP_EXTRA_KEYS.forEach(k => { if (extras[k] != null) localStorage.setItem(k, extras[k]); });
+  if (typeof renderStickies === 'function') renderStickies();
+}
 function exportData(){
   DB.p.lastBackupAt = Date.now();
-  const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+  const payload = Object.assign({}, DB, { _extras: collectBackupExtras() });
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download='scholr-backup-'+todayStr()+'.json';
   a.click(); logDataEvent('Full backup downloaded',''); toast('Data exported!');
@@ -6450,7 +6492,9 @@ function importData(){
         const data=JSON.parse(ev.target.result);
         if(!data.p||!data.notes) throw new Error('Invalid format');
         if(!confirm('This will replace ALL your current data. Continue?')) return;
+        const extras = data._extras; delete data._extras;
         DB=data; save(); renderAll(); applyTheme(DB.p.theme||'forest'); applyFont(DB.p.font||'outfit'); applyEditorPrefs();
+        restoreBackupExtras(extras);
         logDataEvent('Restored backup', f.name);
         toast('Data imported successfully!');
       }catch(err){ toast('Error: '+err.message); }
@@ -6658,8 +6702,8 @@ function renderStickies(){
   document.querySelectorAll('.sticky-note').forEach(el=>el.remove());
   const list = JSON.parse(localStorage.getItem('scholr_stickies')||'[]');
   list.forEach(s=>{
-    const el = document.createElement('div'); el.className='sticky-note'; el.style.position='fixed'; el.style.left=(s.left||40)+'px'; el.style.top=(s.top||40)+'px'; el.style.width=(s.w||220)+'px'; el.style.height=(s.h||160)+'px'; el.style.background=s.color||'#FFFB7D'; el.style.border='1px solid rgba(0,0,0,.12)'; el.style.borderRadius='8px'; el.style.padding='8px'; el.style.zIndex=12010; el.style.boxShadow='0 6px 20px rgba(0,0,0,.12)';
-    el.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><strong style="font-size:12px">Sticky</strong><div><button style="background:none;border:none;cursor:pointer;font-size:13px;margin-right:6px" onclick="removeSticky('${s.id}')">✕</button></div></div><div contenteditable style="height:calc(100% - 28px);overflow:auto">${escapeHtml(s.text)}</div>`;
+    const el = document.createElement('div'); el.className='sticky-note'; el.style.position='fixed'; el.style.left=(s.left||40)+'px'; el.style.top=(s.top||40)+'px'; el.style.width=(s.w||220)+'px'; el.style.height=(s.h||160)+'px'; el.style.background=s.color||'#FFFB7D'; el.style.color='#2A2A1A'; el.style.border='1px solid rgba(0,0,0,.12)'; el.style.borderRadius='8px'; el.style.padding='8px'; el.style.zIndex=12010; el.style.boxShadow='0 6px 20px rgba(0,0,0,.12)';
+    el.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><strong style="font-size:12px;color:#2A2A1A">Sticky</strong><div><button style="background:none;border:none;cursor:pointer;font-size:13px;margin-right:6px;color:#2A2A1A;opacity:.65" onclick="removeSticky('${s.id}')">✕</button></div></div><div contenteditable style="height:calc(100% - 28px);overflow:auto;color:#2A2A1A">${escapeHtml(s.text)}</div>`;
     document.body.appendChild(el);
     makeDraggable(el, el);
     // save position on mouseup
@@ -7921,6 +7965,7 @@ function pomStart(fromFocus) {
   pomState.running = true;
   const btn = g('pom-btn'); if (btn) btn.innerHTML = '⏸ Pause';
   const fb = g('focus-toggle'); if (fb) fb.textContent = '⏸ Pause';
+  const bb = g('bonus-focus-btn'); if (bb) bb.textContent = 'Pause';
   pomState.timer = setInterval(() => {
     pomState.secondsLeft--;
     pomUpdateDisplay();
@@ -7932,6 +7977,7 @@ function pomStop() {
   clearInterval(pomState.timer);
   const btn = g('pom-btn'); if (btn) btn.innerHTML = '▶ Start';
   const fb = g('focus-toggle'); if (fb) fb.textContent = '▶ Start';
+  const bb = g('bonus-focus-btn'); if (bb) bb.textContent = 'Start';
 }
 function pomReset() {
   pomStop();
@@ -8005,6 +8051,7 @@ function pomUpdateDisplay() {
   const el = g('pom-display'); if (el) el.textContent = txt;
   const fl = g('focus-display'); if (fl) fl.textContent = txt;
   const dd = g('d-pom-display'); if (dd) dd.textContent = txt;
+  const bd = g('bonus-focus-display'); if (bd) bd.textContent = txt;
   // Update rings
   const total = { focus: DB.pomodoro.focus||25, short: DB.pomodoro.short||5, long: DB.pomodoro.long||15 }[pomState.mode] * 60;
   const pct = pomState.secondsLeft / total;
@@ -8099,8 +8146,11 @@ function stopAmbient() {
   document.querySelectorAll('.amb-btn').forEach(b => b.classList.remove('on'));
 }
 function toggleAmbient(type) {
-  // Simple oscillator-based ambient noise (plus a generative lofi beat option)
-  const btn = g('amb-' + type);
+  // Simple oscillator-based ambient noise (plus a generative lofi beat option).
+  // Looked up by data-amb rather than a single id because the same sound can
+  // have a button in more than one place (Focus Mode overlay + the mini
+  // Pomodoro widget) — both need to light up together.
+  const btns = document.querySelectorAll('[data-amb="' + type + '"]');
   const wasSameType = ambCtx && ambCtx._type === type;
   stopAmbient();
   if (wasSameType) return; // clicking the currently-playing sound again just turns it off
@@ -8110,7 +8160,7 @@ function toggleAmbient(type) {
     if (type === 'lofi') {
       startLofiBeat(ctx);
       ambCtx = ctx;
-      if (btn) btn.classList.add('on');
+      btns.forEach(b => b.classList.add('on'));
       return;
     }
     const bufLen = ctx.sampleRate * 2;
@@ -8126,7 +8176,7 @@ function toggleAmbient(type) {
     gain.gain.value = type === 'white' ? 0.05 : 0.08;
     src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
     src.start(); ambCtx = ctx;
-    if (btn) btn.classList.add('on');
+    btns.forEach(b => b.classList.add('on'));
   } catch(e) { toast('Audio not supported in this browser'); }
 }
 
@@ -10643,19 +10693,11 @@ function bonusAdminClearHW(){
   bonusRenderUnlocked();
 }
 
-function bonusExportData(){
-  const data = {};
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i);
-    data[k] = localStorage.getItem(k);
-  }
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'scholr-data-export.json';
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
+// Used to dump every raw localStorage key into its own file format — one
+// that "Restore Backup" couldn't actually read back in. Now it's just the
+// one real backup (DB + stickies/scratch/AI history), so anything this
+// button produces can always be restored later.
+function bonusExportData(){ exportData(); }
 
 function bonusConfirmClear(){
   if (!confirm('This will erase ALL locally saved Scholr data on this device. This cannot be undone. Continue?')) return;
@@ -10733,7 +10775,7 @@ function bonusApplyFeatureHooks(flags){
 
   // Focus timer widget
   if (flags.focus && !g('bonus-focus-widget')) bonusMountFocusTimer();
-  if (!flags.focus) { const w = g('bonus-focus-widget'); if (w) w.remove(); clearInterval(bonusFocusInterval); bonusFocusInterval = null; }
+  if (!flags.focus) { const w = g('bonus-focus-widget'); if (w) w.remove(); } // hiding the widget never stops an in-progress focus session
 
   // Daily streak tracker
   if (flags.streak) bonusUpdateStreak();
@@ -10800,58 +10842,37 @@ async function runAiExtraTool(tool){
   }
 }
 
+/* This widget used to run its own private 25-minute countdown, completely
+   separate from the real Pomodoro module (DB.pomodoro/pomState) — starting
+   one didn't affect the other, and this one was never counted in your
+   session/streak stats. It's now just a second face on the same timer:
+   it reads/drives pomState directly, so Start/Pause/Reset here are the exact
+   same session as the Pomodoro page and Focus Mode, and completed sessions
+   count toward your stats and streak like any other. */
 function bonusMountFocusTimer(){
   const div = document.createElement('div');
   div.id = 'bonus-focus-widget';
   div.className = 'bonus-floating-card';
-  div.style.cssText = 'right:20px;left:auto;bottom:160px;padding:12px 14px;width:180px';
+  div.style.cssText = 'right:20px;left:auto;bottom:160px;padding:12px 14px;width:210px';
   div.innerHTML = `
     <div style="font-weight:700;font-size:12px;margin-bottom:6px">⏱️ Focus Timer</div>
     <div id="bonus-focus-display" style="font-size:22px;font-weight:800;text-align:center;margin:6px 0">25:00</div>
-    <div style="display:flex;gap:6px">
-      <button class="bonus-ripple" onclick="bonusFocusToggle()" id="bonus-focus-btn" style="flex:1;border:1px solid var(--bor);background:var(--ac);color:var(--on-ac,#fff);border-radius:8px;padding:6px;font-size:11px;cursor:pointer">Start</button>
-      <button class="bonus-ripple" onclick="bonusFocusReset()" style="border:1px solid var(--bor);background:var(--bg);border-radius:8px;padding:6px 9px;font-size:11px;cursor:pointer">↺</button>
+    <div style="display:flex;gap:6px;margin-bottom:6px">
+      <button class="bonus-ripple" onclick="pomToggle()" id="bonus-focus-btn" style="flex:1;border:1px solid var(--bor);background:var(--ac);color:var(--on-ac,#fff);border-radius:8px;padding:6px;font-size:11px;cursor:pointer">${pomState.running ? 'Pause' : 'Start'}</button>
+      <button class="bonus-ripple" onclick="pomReset()" style="border:1px solid var(--bor);background:var(--bg);border-radius:8px;padding:6px 9px;font-size:11px;cursor:pointer">↺</button>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px">
+      <button class="bonus-ripple amb-btn" data-amb="rain" onclick="toggleAmbient('rain')" style="flex:1 1 30%;border:1px solid var(--bor);background:var(--bg);color:var(--ink3);border-radius:8px;padding:5px 2px;font-size:10px;cursor:pointer">🌧️ Rain</button>
+      <button class="bonus-ripple amb-btn" data-amb="cafe" onclick="toggleAmbient('cafe')" style="flex:1 1 30%;border:1px solid var(--bor);background:var(--bg);color:var(--ink3);border-radius:8px;padding:5px 2px;font-size:10px;cursor:pointer">☕ Café</button>
+      <button class="bonus-ripple amb-btn" data-amb="nature" onclick="toggleAmbient('nature')" style="flex:1 1 30%;border:1px solid var(--bor);background:var(--bg);color:var(--ink3);border-radius:8px;padding:5px 2px;font-size:10px;cursor:pointer">🌿 Nature</button>
+      <button class="bonus-ripple amb-btn" data-amb="white" onclick="toggleAmbient('white')" style="flex:1 1 45%;border:1px solid var(--bor);background:var(--bg);color:var(--ink3);border-radius:8px;padding:5px 2px;font-size:10px;cursor:pointer">⬜ White</button>
+      <button class="bonus-ripple amb-btn" data-amb="lofi" onclick="toggleAmbient('lofi')" style="flex:1 1 45%;border:1px solid var(--bor);background:var(--bg);color:var(--ink3);border-radius:8px;padding:5px 2px;font-size:10px;cursor:pointer">🎵 Lofi</button>
     </div>`;
   document.body.appendChild(div);
-}
-let bonusFocusInterval = null, bonusFocusSeconds = 25 * 60;
-function bonusFocusToggle(){
-  const btn = g('bonus-focus-btn');
-  if (bonusFocusInterval) {
-    clearInterval(bonusFocusInterval); bonusFocusInterval = null;
-    if (btn) btn.textContent = 'Start';
-  } else {
-    bonusFocusInterval = setInterval(() => {
-      bonusFocusSeconds = Math.max(0, bonusFocusSeconds - 1);
-      const m = String(Math.floor(bonusFocusSeconds / 60)).padStart(2, '0');
-      const s = String(bonusFocusSeconds % 60).padStart(2, '0');
-      const disp = g('bonus-focus-display'); if (disp) disp.textContent = m + ':' + s;
-      if (bonusFocusSeconds === 0) {
-        clearInterval(bonusFocusInterval); bonusFocusInterval = null;
-        if (btn) btn.textContent = 'Start';
-        if (typeof toast === 'function') toast('⏱️ Focus session complete!');
-      }
-    }, 1000);
-    if (btn) btn.textContent = 'Pause';
-  }
-}
-function bonusFocusReset(){
-  clearInterval(bonusFocusInterval); bonusFocusInterval = null;
-  bonusFocusSeconds = 25 * 60;
-  const disp = g('bonus-focus-display'); if (disp) disp.textContent = '25:00';
-  const btn = g('bonus-focus-btn'); if (btn) btn.textContent = 'Start';
+  pomUpdateDisplay(); // sync the countdown to whatever session is (or isn't) already running
 }
 
 function bonusUpdateStreak(){
-  const today = new Date().toISOString().slice(0, 10);
-  let data;
-  try { data = JSON.parse(localStorage.getItem('scholr_streak') || '{}'); } catch (_) { data = {}; }
-  if (data.lastDate !== today) {
-    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-    data.count = (data.lastDate === yesterday) ? (data.count || 0) + 1 : 1;
-    data.lastDate = today;
-    localStorage.setItem('scholr_streak', JSON.stringify(data));
-  }
   let badge = g('bonus-streak-badge');
   if (!badge) {
     badge = document.createElement('div');
@@ -10859,7 +10880,7 @@ function bonusUpdateStreak(){
     badge.style.cssText = 'position:fixed;top:14px;right:14px;z-index:7000;background:var(--sur);border:1px solid var(--bor);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;box-shadow:var(--sh2);animation:bonusPop .3s ease both';
     document.body.appendChild(badge);
   }
-  badge.textContent = '🔥 ' + (data.count || 1) + ' day streak';
+  updateStreakBadge(getStreakCount());
 }
 
 function bonusMountQuickNav(){
