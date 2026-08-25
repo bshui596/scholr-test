@@ -2238,6 +2238,11 @@ document.addEventListener('DOMContentLoaded',function(){
               <div class="fr2"><div class="fr"><label class="fl">Grade</label><select class="fsel" id="s-grade"><option>Grade 7</option><option>Grade 8</option><option>Grade 9</option><option>Grade 10</option><option>Grade 11</option><option>Grade 12</option><option>Post Secondary</option></select></div><div class="fr"><label class="fl">Semester</label><select class="fsel" id="s-sem"><option>Semester 1</option><option>Semester 2</option></select></div></div>
               <div class="fr"><label class="fl">Default Note Template</label><select class="fsel" id="s-tpl"><option value="blank">Blank</option><option value="cornell">Cornell Notes</option><option value="outline">Outline</option><option value="lab">Lab Report</option><option value="essay">Essay Plan</option><option value="vocab">Vocab List</option><option value="review">Chapter Review</option><option value="reading">Reading Notes</option><option value="meeting">Study Group</option><option value="mindmap">Mind Map</option><option value="timeline">Timeline</option><option value="problem">Problem Set</option></select></div>
               <button class="btn bp sm" onclick="saveProfile()">Save Profile</button>
+              <p style="font-size:11px;color:var(--ink4);margin-top:8px">Changing Grade or Semester archives your current courses, notes, homework &amp; grades and starts a fresh workspace — nothing is deleted.</p>
+            </div>
+            <div class="set-sec"><h3>🗂 Semester History</h3>
+              <p style="font-size:12px;color:var(--ink3);margin-bottom:8px">Past semesters you've switched away from. Open one to bring it back as your active workspace (your current work gets archived first).</p>
+              <div id="sem-archive-list"></div>
             </div>
             <div class="set-sec"><h3>🖼 Avatar</h3><div class="ava-grid" id="ava-g"></div></div>
           </div>
@@ -3435,18 +3440,81 @@ function loadDB() {
        theme:'forest',font:'outfit',avatar:'🎓',avatarImg:'',setup:false,sbW:260,btnStyle:'default',docStyle:'white'},
     courses:[], hw:[], notes:[], tt:{},
     slots:[...DEF_SLOTS], grades:[], dp:{}, streak:[], folders:[], checklist:[], exams:[],
-    goals:[], planner:[], notifs:[]
+    goals:[], planner:[], notifs:[], archives:{}
   };
   // Always ensure calendar exists with proper structure
   if (!db.calendar || !db.calendar.cals || !db.calendar.events) {
     db.calendar = buildDefaultCalendar();
     try { localStorage.setItem(KEY, JSON.stringify(db)); } catch(e) {}
   }
-  // Migrate older saves that predate goals / planner / notification center
+  // Migrate older saves that predate goals / planner / notification center / semester archives
   if (!db.goals) db.goals = [];
   if (!db.planner) db.planner = [];
   if (!db.notifs) db.notifs = [];
+  if (!db.archives) db.archives = {};
   return db;
+}
+
+/* ── SEMESTER / GRADE SWITCHING ──────────────────────────────
+   Courses, notes, homework, grades, etc. all live "per semester".
+   Switching Grade or Semester in Settings archives the current
+   working set under DB.archives[grade__sem] and either restores a
+   previously-archived snapshot for the target grade/semester, or
+   starts that semester fresh — so you can always come back and
+   check earlier work. ── */
+const SEM_KEYS = ['courses','hw','notes','folders','tt','slots','grades','dp','streak','checklist','exams','goals','planner','notifs'];
+function semKey(grade, sem){ return grade + '__' + sem; }
+function emptySemData(){
+  return { courses:[], hw:[], notes:[], folders:[], tt:{}, slots:[...DEF_SLOTS],
+    grades:[], dp:{}, streak:[], checklist:[], exams:[], goals:[], planner:[], notifs:[] };
+}
+function snapshotSemData(){
+  const def = emptySemData(), snap = {};
+  SEM_KEYS.forEach(k => { snap[k] = JSON.parse(JSON.stringify(DB[k] !== undefined ? DB[k] : def[k])); });
+  return snap;
+}
+function applySemData(data){
+  const def = emptySemData();
+  SEM_KEYS.forEach(k => { DB[k] = (data && data[k] !== undefined) ? data[k] : def[k]; });
+}
+/* Archives the currently-active grade/sem (if different from the target),
+   then loads the target's archived snapshot if one exists, else a blank one. */
+function archiveAndSwitchSemester(newGrade, newSem){
+  const oldKey = semKey(DB.p.grade, DB.p.sem), newKey = semKey(newGrade, newSem);
+  if (oldKey !== newKey) {
+    if (!DB.archives) DB.archives = {};
+    DB.archives[oldKey] = { grade: DB.p.grade, sem: DB.p.sem, savedAt: new Date().toISOString(), data: snapshotSemData() };
+    const existing = DB.archives[newKey];
+    applySemData(existing ? existing.data : emptySemData());
+    delete DB.archives[newKey]; // now active, not archived
+  }
+  DB.p.grade = newGrade;
+  DB.p.sem = newSem;
+}
+function renderSemArchives(){
+  const el = g('sem-archive-list'); if (!el) return;
+  const arch = DB.archives || {};
+  const keys = Object.keys(arch).sort((a,b) => new Date(arch[b].savedAt) - new Date(arch[a].savedAt));
+  if (!keys.length) { el.innerHTML = '<div style="font-size:12px;color:var(--ink4)">No archived semesters yet — switch your Grade or Semester above and past work will show up here.</div>'; return; }
+  el.innerHTML = keys.map(k => {
+    const a = arch[k], d = a.data || {};
+    const cCount = (d.courses||[]).length, nCount = (d.notes||[]).length, hCount = (d.hw||[]).length;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--bor);border-radius:8px;margin-bottom:7px;background:var(--s2)">
+      <div>
+        <div style="font-weight:600;font-size:13px">${a.grade} · ${a.sem}</div>
+        <div style="font-size:11px;color:var(--ink4)">${cCount} course${cCount===1?'':'s'} · ${nCount} note${nCount===1?'':'s'} · ${hCount} homework · saved ${new Date(a.savedAt).toLocaleDateString()}</div>
+      </div>
+      <button class="btn bg sm" onclick="switchToArchivedSemester('${k}')">Open</button>
+    </div>`;
+  }).join('');
+}
+function switchToArchivedSemester(key){
+  const a = (DB.archives||{})[key]; if (!a) return;
+  showConfirm(
+    `Open ${a.grade} · ${a.sem}? Your current ${DB.p.grade} · ${DB.p.sem} work will be saved first, and you can switch back to it anytime.`,
+    () => { archiveAndSwitchSemester(a.grade, a.sem); save(); renderAll(); toast(`Now viewing ${a.grade} · ${a.sem}`); },
+    'Open'
+  );
 }
 
 /* ── CLOUD SYNC ──────────────────────────────────────────────
@@ -3757,12 +3825,30 @@ function renderProfile() {
   });
 }
 function saveProfile() {
-  DB.p.name = g('s-name').value || DB.p.name;
-  DB.p.school = g('s-school').value;
-  DB.p.grade = g('s-grade').value;
-  DB.p.sem = g('s-sem').value;
-  DB.p.tpl = g('s-tpl').value;
-  save(); renderAll(); toast('Profile saved!');
+  const newName = g('s-name').value || DB.p.name;
+  const newSchool = g('s-school').value;
+  const newTpl = g('s-tpl').value;
+  const newGrade = g('s-grade').value;
+  const newSem = g('s-sem').value;
+  const switching = DB.p.grade && (newGrade !== DB.p.grade || newSem !== DB.p.sem);
+
+  const applyNonAcademicFields = () => { DB.p.name = newName; DB.p.school = newSchool; DB.p.tpl = newTpl; };
+
+  if (switching) {
+    showConfirm(
+      `Switching to ${newGrade} · ${newSem} will save (archive) your current courses, notes, homework and grades, then start a clean workspace for the new semester. You can come back to ${DB.p.grade} · ${DB.p.sem} anytime from the Semester History list below. Continue?`,
+      () => {
+        archiveAndSwitchSemester(newGrade, newSem);
+        applyNonAcademicFields();
+        save(); renderAll(); toast('Switched semester — previous work archived!');
+      },
+      'Switch & Archive'
+    );
+  } else {
+    DB.p.grade = newGrade; DB.p.sem = newSem;
+    applyNonAcademicFields();
+    save(); renderAll(); toast('Profile saved!');
+  }
 }
 function pickAv(emoji) {
   DB.p.avatar = emoji; DB.p.avatarImg = ''; save(); renderProfile();
@@ -3812,6 +3898,7 @@ function renderSettings() {
   const p = DB.p;
   setValue('s-name', p.name); setValue('s-school', p.school||'');
   setSel('s-grade', p.grade); setSel('s-sem', p.sem); setSel('s-tpl', p.tpl||'blank');
+  renderSemArchives();
   // Avatar
   const ag = g('ava-g');
   if (ag) ag.innerHTML = AVATARS.map(a =>
@@ -4269,7 +4356,7 @@ function wtdGoalCandidates() {
       else if (days <= 14) urgency += 8;
     }
     const score = urgency;
-    const urgencyLevel = score > 55 ? 'high' : score > 30 ? 'med' : 'low';
+    const urgencyLevel = gap >= 10 ? 'high' : gap >= 5 ? 'med' : 'low';
     const c = DB.courses.find(c => c.name === gl.course);
     const nextHw = goalNextAssignment(gl.course);
     const hwClause = nextHw ? ` "${nextHw.title}" is due ${dueFmt(nextHw.due).toLowerCase()} — a good place to focus.` : '';
@@ -5663,7 +5750,7 @@ function saveGrade(){
   const mark=+g('gr-mk').value, out=+g('gr-of').value||100;
   if(isNaN(mark)){toast('Enter a valid mark!');return;}
   DB.grades.push({id:'g'+Date.now(),name,course:g('gr-co').value,cat:g('gr-ca').value,mark,out,pct:Math.round(mark/out*100),wt:+g('gr-wt').value||25,date:g('gr-dt').value,notes:g('gr-nt').value});
-  save(); closeMo('mo-gr'); g('gr-na').value=''; renderGrades(); renderDashboard(); toast('Mark added!');
+  save(); closeMo('mo-gr'); g('gr-na').value=''; renderGrades(); renderGoals(); renderDashboard(); toast('Mark added!');
 }
 function calcAvg(){return DB.grades.length?DB.grades.reduce((s,g)=>s+g.pct,0)/DB.grades.length:0;}
 function lGrade(p){if(p>=90)return'A+';if(p>=85)return'A';if(p>=80)return'A-';if(p>=77)return'B+';if(p>=73)return'B';if(p>=70)return'B-';if(p>=67)return'C+';if(p>=63)return'C';if(p>=60)return'C-';if(p>=57)return'D+';if(p>=53)return'D';if(p>=50)return'D-';return'F';}
@@ -5678,8 +5765,10 @@ function renderGrades(){
   DB.courses.forEach(c=>{
     const cg=DB.grades.filter(gg=>gg.course===c.name), ca=cg.length?cg.reduce((s,gg)=>s+gg.pct,0)/cg.length:null;
     const cl=ca!==null?lGrade(ca):null, clk=cl?lKey(cl):'A';
+    const goal=(DB.goals||[]).find(x=>x.course===c.name);
+    const goalBadge = goal ? `<span class="tag" onclick="event.stopPropagation();go('goals')" title="Goal: ${goal.target}% — click to view Grade Goals" style="cursor:pointer;background:var(--acll);color:var(--ac);font-weight:700">🎯 ${goal.target}%</span>` : '';
     const div=document.createElement('div'); div.className='gb-course';
-    div.innerHTML=`<div class="gb-ch" onclick="this.nextElementSibling.classList.toggle('open')"><span style="width:9px;height:9px;border-radius:50%;background:${c.color};display:inline-block;flex-shrink:0"></span><span class="gb-cn">${c.name}</span>${ca!==null?`<span class="gb-avg" style="color:${c.color}">${ca.toFixed(1)}%</span><span class="gb-ltr" style="background:${GR_CLR[clk]?.bg};color:${GR_CLR[clk]?.fg}">${cl}</span>`:'<span style="font-size:12.5px;color:var(--ink4)">No marks</span>'}<span style="margin-left:8px;color:var(--ink4);font-size:11px">▼</span></div><div class="gb-bd">${cg.length?`<table class="gb-tbl"><thead><tr><th>Assignment</th><th>Category</th><th>Mark</th><th>%</th><th>Bar</th><th>Date</th><th></th></tr></thead><tbody>${cg.map(gg=>{const lk2=lKey(lGrade(gg.pct));return`<tr><td><strong>${gg.name}</strong>${gg.notes?`<div style="font-size:10.5px;color:var(--ink4)">${gg.notes}</div>`:''}</td><td><span class="tag" style="background:var(--s2);color:var(--ink)">${gg.cat||'General'}</span></td><td>${gg.mark}/${gg.out}</td><td style="font-weight:700;color:${GR_CLR[lk2]?.fg||'var(--ink)'}">${gg.pct}%</td><td><div class="gb-bar"><div class="gb-fill" style="width:${gg.pct}%;background:${c.color}"></div></div></td><td style="font-size:11px;color:var(--ink4)">${gg.date||''}</td><td><button onclick="delGrade('${gg.id}')" style="background:none;color:var(--ink4);cursor:pointer;font-size:11px">✕</button></td></tr>`;}).join('')}</tbody></table>`:'<div style="padding:13px;font-size:12.5px;color:var(--ink4)">No marks yet</div>'}<button class="gb-add" onclick="openGrade('${c.name}')">+ Add Mark for ${c.name}</button></div>`;
+    div.innerHTML=`<div class="gb-ch" onclick="this.nextElementSibling.classList.toggle('open')"><span style="width:9px;height:9px;border-radius:50%;background:${c.color};display:inline-block;flex-shrink:0"></span><span class="gb-cn">${c.name}</span>${ca!==null?`<span class="gb-avg" style="color:${c.color}">${ca.toFixed(1)}%</span><span class="gb-ltr" style="background:${GR_CLR[clk]?.bg};color:${GR_CLR[clk]?.fg}">${cl}</span>`:'<span style="font-size:12.5px;color:var(--ink4)">No marks</span>'}${goalBadge}<span style="margin-left:8px;color:var(--ink4);font-size:11px">▼</span></div><div class="gb-bd">${cg.length?`<table class="gb-tbl"><thead><tr><th>Assignment</th><th>Category</th><th>Mark</th><th>%</th><th>Bar</th><th>Date</th><th></th></tr></thead><tbody>${cg.map(gg=>{const lk2=lKey(lGrade(gg.pct));return`<tr><td><strong>${gg.name}</strong>${gg.notes?`<div style="font-size:10.5px;color:var(--ink4)">${gg.notes}</div>`:''}</td><td><span class="tag" style="background:var(--s2);color:var(--ink)">${gg.cat||'General'}</span></td><td>${gg.mark}/${gg.out}</td><td style="font-weight:700;color:${GR_CLR[lk2]?.fg||'var(--ink)'}">${gg.pct}%</td><td><div class="gb-bar"><div class="gb-fill" style="width:${gg.pct}%;background:${c.color}"></div></div></td><td style="font-size:11px;color:var(--ink4)">${gg.date||''}</td><td><button onclick="delGrade('${gg.id}')" style="background:none;color:var(--ink4);cursor:pointer;font-size:11px">✕</button></td></tr>`;}).join('')}</tbody></table>`:'<div style="padding:13px;font-size:12.5px;color:var(--ink4)">No marks yet</div>'}<button class="gb-add" onclick="openGrade('${c.name}')">+ Add Mark for ${c.name}</button></div>`;
     cont.appendChild(div);
   });
 }
@@ -5753,6 +5842,7 @@ function renderGoals(){
           ${gl.note?`<div style="font-size:11px;color:var(--ink4);margin-top:3px">${gl.note}</div>`:''}
         </div>
         <div style="display:flex;gap:2px;flex-shrink:0">
+          <button onclick="openGrade('${gl.course}')" title="Add Mark" style="background:none;color:var(--ink4);cursor:pointer;font-size:12px;padding:2px 4px">➕</button>
           <button onclick="openGoal('${gl.course}')" title="Edit" style="background:none;color:var(--ink4);cursor:pointer;font-size:12px;padding:2px 4px">✎</button>
           <button onclick="delGoal('${gl.id}')" title="Delete" style="background:none;color:var(--ink4);cursor:pointer;font-size:12px;padding:2px 4px">✕</button>
         </div>
