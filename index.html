@@ -988,6 +988,8 @@ img{max-width:100%}
 .wp-col.wp-today{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac) inset}
 .wp-col-hd{display:flex;justify-content:space-between;align-items:center;padding:9px 10px;border-bottom:1px solid var(--bor);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--ink3)}
 .wp-col-date{color:var(--ink4);font-weight:600}
+.wp-col-carry{margin:6px 7px 0;padding:4px 7px;border-radius:7px;background:var(--ambl);color:var(--amb);font-size:10px;font-weight:700;cursor:pointer;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wp-col-carry:hover{text-decoration:underline;filter:brightness(0.97)}
 .wp-col-body{padding:7px;display:flex;flex-direction:column;gap:6px;flex:1}
 .wp-item{background:var(--s2);border-radius:8px;padding:7px 8px;display:flex;align-items:flex-start;gap:6px;font-size:12px;transition:opacity .15s}
 .wp-item.done{opacity:.55}
@@ -2330,6 +2332,11 @@ document.addEventListener('DOMContentLoaded',function(){
               <div class="set-row"><label>Delete after<small>Days since homework was completed / exam date passed</small></label><div style="display:flex;gap:6px;align-items:center"><select class="fsel" style="width:140px" id="s-autodel-days" onchange="autodelDaysChange(this.value)"><option value="7">7 days</option><option value="14">14 days</option><option value="30">30 days</option><option value="60">60 days</option><option value="90">90 days</option><option value="custom">Other…</option></select><input class="fi" type="number" min="1" id="s-autodel-days-custom" placeholder="Days" style="width:80px;display:none" onchange="DB.p.autoDelDays=Math.max(1,+this.value||1);save();"/></div></div>
               <div class="set-row"><label>Run cleanup now<small>Apply the rule immediately, regardless of the toggle above</small></label><button class="btn bd sm" onclick="autoDeleteFinished(true)">Run Now</button></div>
             </div>
+            <div class="set-sec"><h3>↷ Auto-Carry-Over</h3>
+              <p style="font-size:11.5px;color:var(--ink3);margin-bottom:10px">Unfinished Weekly Planner items left on a past day automatically move forward to today, so nothing gets silently stranded on a day you've already scrolled past. Items tied to an exam that's already happened are left alone instead of being rescheduled.</p>
+              <div class="set-row"><label>Auto-carry-over<small>Turn automatic forward-carrying on or off</small></label><select class="fsel" style="width:140px" id="s-autocarry-on" onchange="DB.p.autoCarryOn=+this.value;save();"><option value="0">Off</option><option value="1">On</option></select></div>
+              <div class="set-row"><label>Run now<small>Carry any overdue items forward immediately</small></label><button class="btn bd sm" onclick="wpAutoCarryOverdue(true)">Run Now</button></div>
+            </div>
             <div class="set-sec"><h3>🗑 Clear Data</h3>
               <div class="set-row"><label>Clear homework<small>Removes all assignments</small></label><button class="btn bd sm" onclick="clearD('hw')">Clear</button></div>
               <div class="set-row"><label>Clear notes<small>Deletes all notes</small></label><button class="btn bd sm" onclick="clearD('notes')">Clear</button></div>
@@ -2797,6 +2804,16 @@ document.addEventListener('DOMContentLoaded',function(){
     <div><label class="fl">Priority</label><select class="fsel" id="wp-pr"><option value="0">Normal</option><option value="1">⭐ High</option></select></div>
   </div>
   <div class="mdl-acts"><button class="btn bg" onclick="closeMo('mo-plan')">Cancel</button><button class="btn bp" onclick="wpSave()">Add</button></div>
+</div></div>
+
+<div class="mo" id="mo-carryday"><div class="mdl">
+  <div class="mdl-title">↷ Carry Over Day</div>
+  <p id="cd-msg" style="font-size:13px;color:var(--ink3);line-height:1.5;margin:4px 0 14px"></p>
+  <div class="fr2">
+    <div><label class="fl">Move to week</label><select class="fsel" id="cd-week" onchange="cdRefreshDayOptions()"><option value="next">Next week</option><option value="this">This week</option></select></div>
+    <div><label class="fl">Move to day</label><select class="fsel" id="cd-day"><option value="0">Mon</option><option value="1">Tue</option><option value="2">Wed</option><option value="3">Thu</option><option value="4">Fri</option><option value="5">Sat</option><option value="6">Sun</option></select></div>
+  </div>
+  <div class="mdl-acts"><button class="btn bg" onclick="closeMo('mo-carryday')">Cancel</button><button class="btn bp" onclick="wpCarryOverDayConfirm()">Carry Over</button></div>
 </div></div>
 
 <div class="mo" id="mo-goal"><div class="mdl">
@@ -3444,7 +3461,7 @@ function loadDB() {
   if (!db) db = {
     p:{name:'',grade:'Grade 11',sem:'Semester 2',school:'',tpl:'blank',
        theme:'forest',font:'outfit',avatar:'🎓',avatarImg:'',setup:false,sbW:260,btnStyle:'default',docStyle:'white',
-       autoDelOn:0,autoDelDays:30},
+       autoDelOn:0,autoDelDays:30,autoCarryOn:1},
     courses:[], hw:[], notes:[], tt:{},
     slots:[...DEF_SLOTS], grades:[], dp:{}, streak:[], folders:[], checklist:[], exams:[],
     goals:[], planner:[], notifs:[], archives:{}
@@ -3461,6 +3478,7 @@ function loadDB() {
   if (!db.archives) db.archives = {};
   if (db.p && db.p.autoDelOn === undefined) db.p.autoDelOn = 0;
   if (db.p && db.p.autoDelDays === undefined) db.p.autoDelDays = 30;
+  if (db.p && db.p.autoCarryOn === undefined) db.p.autoCarryOn = 1;
   return db;
 }
 
@@ -3844,6 +3862,7 @@ function boot() {
   initSbDrag();
   initNlDrag();
   checkDueReminders();
+  wpAutoCarryOverdue();
   renderLayoutSwatches();
   seedYCDSBCalendar();
   autoDeleteFinished();
@@ -3988,6 +4007,7 @@ function renderSettings() {
   if(p.sbStyle) setSel('s-sbstyle', p.sbStyle);
   if(p.docStyle) setSel('s-docstyle', p.docStyle);
   setSel('s-autodel-on', String(p.autoDelOn ? 1 : 0));
+  setSel('s-autocarry-on', String(p.autoCarryOn===0 ? 0 : 1));
   const AUTODEL_PRESETS = ['7','14','30','60','90'];
   if (AUTODEL_PRESETS.includes(String(p.autoDelDays))) {
     setSel('s-autodel-days', String(p.autoDelDays || 30));
@@ -6063,6 +6083,118 @@ function wpCarryOver(){
     doCarry();
   }
 }
+/* Carry over a single day's unfinished items to a day/week the user picks
+   (rather than dumping the whole week onto next week like wpCarryOver).
+   "This week" / "Next week" always mean the real calendar weeks relative to
+   today — not whatever week happens to be on screen — so an item that got
+   pushed out to next Monday can still be pulled back to an opening tomorrow.
+   The only hard rule is the target date can't be before today; it's fine to
+   move something earlier than where it currently sits. */
+let _cdWeek=null, _cdDay=null;
+function wpCarryOverDay(dayIdx){
+  const week=wpWeekKey(wpWeekOffset);
+  const unfinished=(DB.planner||[]).filter(i=>i.week===week && i.day===dayIdx && !i.done);
+  if(!unfinished.length){ toast('Nothing to carry over from '+WP_DAYS[dayIdx]+'!'); return; }
+  _cdWeek=week; _cdDay=dayIdx;
+  setText('cd-msg', `Move ${unfinished.length} unfinished item${unfinished.length===1?'':'s'} from ${WP_DAYS[dayIdx]} to:`);
+  setSel('cd-week', _cdWeek===wpWeekKey(1) ? 'next' : 'this'); // default to whichever real week the item is currently in
+  cdRefreshDayOptions();
+  const daySel=g('cd-day');
+  if(daySel && Array.from(daySel.options).some(o=>o.value===String(_cdDay))) daySel.value=String(_cdDay);
+  showMo('mo-carryday');
+}
+// Keeps the target-day list limited to today or later, in whichever real week
+// (this/next) is selected — never a date that's already passed.
+function cdRefreshDayOptions(){
+  const daySel=g('cd-day'); if(!daySel || _cdWeek===null) return;
+  const weekSel=g('cd-week').value;
+  const targetWeekKey = weekSel==='next' ? wpWeekKey(1) : wpWeekKey(0);
+  const monday=new Date(targetWeekKey+'T00:00:00');
+  const todayStr=examIsoDate(new Date());
+  const cur=daySel.value;
+  const opts=[];
+  for(let d=0; d<7; d++){
+    const dt=new Date(monday); dt.setDate(dt.getDate()+d);
+    if(examIsoDate(dt) >= todayStr) opts.push(d);
+  }
+  daySel.innerHTML = opts.map(d=>`<option value="${d}">${WP_DAYS[d]}</option>`).join('');
+  if(opts.some(d=>String(d)===cur)) daySel.value=cur;
+  else daySel.value = opts.length ? String(opts[0]) : '';
+}
+function wpCarryOverDayConfirm(){
+  if(_cdWeek===null) return;
+  if(!g('cd-day').options.length){ toast('No valid day available!'); return; }
+  const targetWeek = g('cd-week').value==='next' ? wpWeekKey(1) : wpWeekKey(0);
+  const targetDay = +g('cd-day').value;
+  const targetDate=new Date(targetWeek+'T00:00:00'); targetDate.setDate(targetDate.getDate()+targetDay);
+  const todayStr=examIsoDate(new Date());
+  if(examIsoDate(targetDate) < todayStr){ toast('Pick today or a later date!'); return; }
+  if(targetWeek===_cdWeek && targetDay===_cdDay){ toast("That's already where it is!"); return; }
+  const srcWeek=_cdWeek, srcDay=_cdDay;
+  const items=(DB.planner||[]).filter(i=>i.week===srcWeek && i.day===srcDay && !i.done);
+  if(!items.length){ closeMo('mo-carryday'); return; }
+  closeMo('mo-carryday');
+
+  const doCarry=()=>{
+    items.forEach(i=>{ i.week=targetWeek; i.day=targetDay; });
+    save(); renderPlanner();
+    toast(`Carried ${items.length} item${items.length===1?'':'s'} to ${WP_DAYS[targetDay]}`);
+  };
+
+  // Same exam-overlap safety check as wpCarryOver, scoped to the landing date chosen here.
+  const landDate=targetDate;
+  const overlapping=[];
+  items.forEach(i=>{
+    if(!i.examId) return;
+    const ex=(DB.exams||[]).find(e=>e.id===i.examId); if(!ex) return;
+    if(examIsoDate(landDate) >= ex.date) overlapping.push(ex);
+  });
+  if(overlapping.length){
+    const names=[...new Set(overlapping.map(ex=>`${ex.title} (${ex.course})`))];
+    const plural=overlapping.length===1;
+    const msg=`⚠️ ${overlapping.length} study task${plural?'':'s'} you're carrying over ${plural?'is':'are'} for ${names.join(', ')} — that exam will already be over by the day ${plural?'it lands':'they land'}. Carry over anyway?`;
+    showConfirm(msg, doCarry, 'Carry Over Anyway');
+  } else {
+    doCarry();
+  }
+}
+/* Runs automatically (once at boot, or on demand via Settings) and carries any
+   unfinished planner item still sitting on a past day forward onto today — so
+   nothing gets silently stranded on a day you've scrolled away from. Items
+   tied to an exam that's already happened are left where they are rather than
+   rescheduled, matching the safety check in the manual carry-over flows above.
+   Also logs an entry in the notification center (deduped per day) whenever it
+   actually moves something, so it's visible even if you weren't watching. */
+function wpAutoCarryOverdue(manual){
+  const on = DB.p.autoCarryOn===0 ? false : true;
+  if(!manual && !on) return 0;
+  if(!DB.planner || !DB.planner.length){ if(manual) toast('Nothing overdue to carry over'); return 0; }
+  const todayStr = examIsoDate(new Date());
+  const todayWeek = wpWeekKeyForDate(todayStr);
+  const todayDay = wpDayIndexForDate(todayStr);
+  let moved=0;
+  DB.planner.forEach(i=>{
+    if(i.done) return;
+    if(i.week===todayWeek && i.day===todayDay) return; // already today
+    const itemMonday=new Date(i.week+'T00:00:00');
+    const itemDate=new Date(itemMonday); itemDate.setDate(itemDate.getDate()+i.day);
+    if(examIsoDate(itemDate) >= todayStr) return; // not actually in the past
+    if(i.examId){
+      const ex=(DB.exams||[]).find(e=>e.id===i.examId);
+      if(ex && todayStr >= ex.date) return; // that exam is already over — don't reschedule study time for it
+    }
+    i.week=todayWeek; i.day=todayDay;
+    moved++;
+  });
+  if(moved){
+    save();
+    if(g('wp-board')) renderPlanner();
+    pushNotif('plan', `↷ Carried ${moved} overdue item${moved===1?'':'s'} forward to today`, 'autocarry-'+todayStr);
+    save(); renderNotifCenter();
+  }
+  if(manual) toast(moved?`Carried ${moved} overdue item${moved===1?'':'s'} to today`:'Nothing overdue to carry over');
+  return moved;
+}
 function renderPlanner(){
   const board=g('wp-board'); if(!board) return;
   const week=wpWeekKey(wpWeekOffset);
@@ -6092,6 +6224,7 @@ function renderPlanner(){
     const dayDate=new Date(monday); dayDate.setDate(dayDate.getDate()+idx);
     const isToday = dayDate.toDateString()===new Date().toDateString();
     const dayItems = items.filter(i=>i.day===idx).sort((a,b)=>(b.pr-a.pr));
+    const dayUnfinished = dayItems.filter(i=>!i.done).length;
     const dayExams = weekExams.filter(e=>e.date===examIsoDate(dayDate));
     const dayBadgeIc = dayExams.length>1 ? '🗓️' : (dayExams.length ? (EXAM_TYPE_IC[dayExams[0].type]||'📝') : '');
     const examBadge = dayExams.length ? `<div class="wp-col-exam" title="${escapeHtml(dayExams.map(e=>e.title).join(', '))}" onclick="examOpenAndExpand('${dayExams[0].id}')">${dayBadgeIc} ${dayExams.length>1?dayExams.length+' exams':escapeHtml(dayExams[0].title)}</div>` : '';
@@ -6101,6 +6234,7 @@ function renderPlanner(){
       <div class="wp-col-hd"><span>${label}</span><span class="wp-col-date">${dayDate.getDate()}</span></div>
       ${examBadge}
       ${hwBadge}
+      ${dayUnfinished?`<div class="wp-col-carry" onclick="wpCarryOverDay(${idx})" title="Move this day's unfinished items elsewhere">↷ Carry over ${dayUnfinished} unfinished</div>`:''}
       <div class="wp-col-body">${dayItems.length?dayItems.map(i=>{
         const linkedExam = i.examId ? (DB.exams||[]).find(e=>e.id===i.examId) : null;
         return `
@@ -6922,7 +7056,7 @@ function toast(msg){const t=g('toast');t.textContent=msg;t.classList.add('on');c
    upcoming exams, and grade goals falling behind. Persisted in
    DB.notifs so it survives reloads; deduped per-day via `key` so
    generateNotifs() can be called freely without spamming the list. */
-const NOTIF_ICON = {hw:'📋', exam:'⏳', goal:'🏆'};
+const NOTIF_ICON = {hw:'📋', exam:'⏳', goal:'🏆', plan:'↷'};
 function pushNotif(type, msg, key){
   if (!DB.notifs) DB.notifs = [];
   const today = new Date().toISOString().slice(0,10);
