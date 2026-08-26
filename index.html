@@ -6785,6 +6785,48 @@ function renderStickies(){
 }
 function removeSticky(id){ let list = JSON.parse(localStorage.getItem('scholr_stickies')||'[]'); list = list.filter(s=>s.id!==id); localStorage.setItem('scholr_stickies', JSON.stringify(list)); renderStickies(); }
 function escapeHtml(str){ return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Lightweight markdown renderer for AI output (chat + tool panes).
+// Escapes HTML first, then supports: **bold**, *italic*/_italic_, `code`,
+// #/##/### headers, - / * bullet lists, 1. numbered lists, and paragraphs.
+function mdToHtml(text){
+  if (!text) return '';
+  let html = escapeHtml(text);
+
+  // Fenced code blocks first so their contents aren't touched by other rules
+  html = html.replace(/```([\s\S]*?)```/g, (m, code) => '<pre><code>' + code.replace(/^\n/, '') + '</code></pre>');
+
+  // Headers (line-based)
+  html = html.replace(/^### (.*)$/gm, '<h4>$1</h4>');
+  html = html.replace(/^## (.*)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^# (.*)$/gm, '<h2>$1</h2>');
+
+  // Bold, then italic (order matters so *** and ** aren't eaten by the italic rule)
+  html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+  html = html.replace(/(^|[^*])\*([^*\n]+?)\*(?!\*)/g, '$1<em>$2</em>');
+  html = html.replace(/(^|[^\w_])_([^_\n]+?)_(?![\w_])/g, '$1<em>$2</em>');
+
+  // Inline code
+  html = html.replace(/`([^`\n]+?)`/g, '<code>$1</code>');
+
+  // Bullet + numbered lists (group consecutive matching lines)
+  html = html.replace(/(?:^|\n)((?:[ \t]*[-*] .*(?:\n|$))+)/g, (m, block) => {
+    const items = block.trim().split('\n').map(l => '<li>' + l.replace(/^[ \t]*[-*] /, '') + '</li>').join('');
+    return '\n<ul>' + items + '</ul>\n';
+  });
+  html = html.replace(/(?:^|\n)((?:[ \t]*\d+\. .*(?:\n|$))+)/g, (m, block) => {
+    const items = block.trim().split('\n').map(l => '<li>' + l.replace(/^[ \t]*\d+\. /, '') + '</li>').join('');
+    return '\n<ol>' + items + '</ol>\n';
+  });
+
+  // Remaining newlines -> line breaks (skip right after block-level tags)
+  html = html.replace(/\n(?!<\/?(ul|ol|li|h[2-4]|pre)>)/g, '<br>');
+  html = html.replace(/(<\/(?:ul|ol|h[2-4]|pre)>)<br>/g, '$1');
+
+  return html;
+}
 document.addEventListener('DOMContentLoaded', renderStickies);
 /* ── INTERFACE CUSTOMIZATION ── */
 function setShadow(v){
@@ -10240,7 +10282,7 @@ async function aiChatSend(e){
           if (parsed.error) throw new Error(parsed.error);
           if (parsed.text) {
             fullReply += parsed.text;
-            botEl.textContent = fullReply;
+            botEl.innerHTML = mdToHtml(fullReply);
             if (msgsWrap) msgsWrap.scrollTop = msgsWrap.scrollHeight;
           }
         }
@@ -10337,7 +10379,7 @@ async function runAiTool(tool){
 
   try {
     const data = await aiPost(cfg.endpoint, body);
-    if (outEl) { outEl.textContent = data[cfg.resultKey] || 'No response.'; aiTypeset(outEl); }
+    if (outEl) { outEl.innerHTML = mdToHtml(data[cfg.resultKey] || 'No response.'); aiTypeset(outEl); }
   } catch (err) {
     console.error('AI tool error (' + tool + '):', err);
     if (outEl) outEl.textContent = '⚠️ ' + err.message;
