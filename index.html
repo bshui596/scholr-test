@@ -2324,6 +2324,12 @@ document.addEventListener('DOMContentLoaded',function(){
               <p style="font-size:11.5px;color:var(--ink3);margin-bottom:10px">Save current editor settings (width, font size, line spacing, padding, zoom) as defaults for all new notes.</p>
               <button class="btn bp sm" onclick="saveNoteDefaults()">💾 Save Current as Default</button>
             </div>
+            <div class="set-sec"><h3>🧹 Auto-Delete Finished Items</h3>
+              <p style="font-size:11.5px;color:var(--ink3);margin-bottom:10px">Automatically clear out homework once it's been marked done, and exams once their date has passed, after a set number of days — keeps your boards from piling up old items.</p>
+              <div class="set-row"><label>Auto-delete<small>Turn scheduled cleanup on or off</small></label><select class="fsel" style="width:140px" id="s-autodel-on" onchange="DB.p.autoDelOn=+this.value;save();"><option value="0">Off</option><option value="1">On</option></select></div>
+              <div class="set-row"><label>Delete after<small>Days since homework was completed / exam date passed</small></label><div style="display:flex;gap:6px;align-items:center"><select class="fsel" style="width:140px" id="s-autodel-days" onchange="autodelDaysChange(this.value)"><option value="7">7 days</option><option value="14">14 days</option><option value="30">30 days</option><option value="60">60 days</option><option value="90">90 days</option><option value="custom">Other…</option></select><input class="fi" type="number" min="1" id="s-autodel-days-custom" placeholder="Days" style="width:80px;display:none" onchange="DB.p.autoDelDays=Math.max(1,+this.value||1);save();"/></div></div>
+              <div class="set-row"><label>Run cleanup now<small>Apply the rule immediately, regardless of the toggle above</small></label><button class="btn bd sm" onclick="autoDeleteFinished(true)">Run Now</button></div>
+            </div>
             <div class="set-sec"><h3>🗑 Clear Data</h3>
               <div class="set-row"><label>Clear homework<small>Removes all assignments</small></label><button class="btn bd sm" onclick="clearD('hw')">Clear</button></div>
               <div class="set-row"><label>Clear notes<small>Deletes all notes</small></label><button class="btn bd sm" onclick="clearD('notes')">Clear</button></div>
@@ -3437,7 +3443,8 @@ function loadDB() {
   try { const r = localStorage.getItem(KEY); if (r) db = JSON.parse(r); } catch(e) {}
   if (!db) db = {
     p:{name:'',grade:'Grade 11',sem:'Semester 2',school:'',tpl:'blank',
-       theme:'forest',font:'outfit',avatar:'🎓',avatarImg:'',setup:false,sbW:260,btnStyle:'default',docStyle:'white'},
+       theme:'forest',font:'outfit',avatar:'🎓',avatarImg:'',setup:false,sbW:260,btnStyle:'default',docStyle:'white',
+       autoDelOn:0,autoDelDays:30},
     courses:[], hw:[], notes:[], tt:{},
     slots:[...DEF_SLOTS], grades:[], dp:{}, streak:[], folders:[], checklist:[], exams:[],
     goals:[], planner:[], notifs:[], archives:{}
@@ -3452,7 +3459,59 @@ function loadDB() {
   if (!db.planner) db.planner = [];
   if (!db.notifs) db.notifs = [];
   if (!db.archives) db.archives = {};
+  if (db.p && db.p.autoDelOn === undefined) db.p.autoDelOn = 0;
+  if (db.p && db.p.autoDelDays === undefined) db.p.autoDelDays = 30;
   return db;
+}
+
+function autodelDaysChange(v) {
+  const ci = g('s-autodel-days-custom');
+  if (v === 'custom') {
+    if (ci) { ci.style.display = ''; ci.value = DB.p.autoDelDays || ''; ci.focus(); }
+    return;
+  }
+  if (ci) ci.style.display = 'none';
+  DB.p.autoDelDays = +v;
+  save();
+}
+
+/* ── AUTO-DELETE FINISHED ITEMS ──────────────────────────────
+   Optional cleanup: once enabled in Settings → Data, removes
+   homework that's been marked done (using its completedAt
+   timestamp) and exams whose date has passed, once more than
+   DB.p.autoDelDays days have gone by. Runs once per app boot;
+   `manual` (true) bypasses the on/off toggle for the "Run Now"
+   button and always reports a result via toast. ── */
+function autoDeleteFinished(manual) {
+  const on = DB.p.autoDelOn ? true : false;
+  if (!manual && !on) return;
+  const days = DB.p.autoDelDays || 30;
+  const cutoff = Date.now() - days * 86400000;
+  let hwRemoved = 0, exRemoved = 0;
+  if (Array.isArray(DB.hw) && DB.hw.length) {
+    const before = DB.hw.length;
+    DB.hw = DB.hw.filter(h => !(h.status === 'done' && h.completedAt && h.completedAt < cutoff));
+    hwRemoved = before - DB.hw.length;
+  }
+  if (Array.isArray(DB.exams) && DB.exams.length) {
+    const before = DB.exams.length;
+    DB.exams = DB.exams.filter(e => {
+      if (!e.date) return true;
+      const examEnd = new Date(e.date + 'T23:59:59').getTime();
+      return !(examEnd < cutoff);
+    });
+    exRemoved = before - DB.exams.length;
+  }
+  if (hwRemoved || exRemoved) {
+    save();
+    if (typeof renderHW === 'function') renderHW();
+    if (typeof renderDashboard === 'function') renderDashboard();
+    if (typeof updateBadge === 'function') updateBadge();
+    if (typeof examRender === 'function') examRender();
+    if (manual) toast(`Removed ${hwRemoved} finished assignment${hwRemoved===1?'':'s'} and ${exRemoved} past exam${exRemoved===1?'':'s'}`);
+  } else if (manual) {
+    toast('Nothing old enough to delete yet');
+  }
 }
 
 /* ── SEMESTER / GRADE SWITCHING ──────────────────────────────
@@ -3787,6 +3846,7 @@ function boot() {
   checkDueReminders();
   renderLayoutSwatches();
   seedYCDSBCalendar();
+  autoDeleteFinished();
 }
 
 function renderAll() {
@@ -3927,6 +3987,16 @@ function renderSettings() {
   if(p.btnStyle) setSel('s-btnstyle', p.btnStyle);
   if(p.sbStyle) setSel('s-sbstyle', p.sbStyle);
   if(p.docStyle) setSel('s-docstyle', p.docStyle);
+  setSel('s-autodel-on', String(p.autoDelOn ? 1 : 0));
+  const AUTODEL_PRESETS = ['7','14','30','60','90'];
+  if (AUTODEL_PRESETS.includes(String(p.autoDelDays))) {
+    setSel('s-autodel-days', String(p.autoDelDays || 30));
+    const ci = g('s-autodel-days-custom'); if (ci) ci.style.display = 'none';
+  } else {
+    setSel('s-autodel-days', 'custom');
+    const ci = g('s-autodel-days-custom');
+    if (ci) { ci.style.display = ''; ci.value = p.autoDelDays || 30; }
+  }
   const ctSec=g('custom-theme-sec'); if(ctSec) ctSec.style.display=p.theme==='custom'?'block':'none';
   buildCustomTheme();
   // Courses
