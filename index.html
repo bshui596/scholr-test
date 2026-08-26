@@ -3863,6 +3863,7 @@ function boot() {
   initNlDrag();
   checkDueReminders();
   wpAutoCarryOverdue();
+  pomCheckDayRollover();
   renderLayoutSwatches();
   seedYCDSBCalendar();
   autoDeleteFinished();
@@ -4221,7 +4222,7 @@ function go(id) {
   if (id==='flashcards') fcRenderDecks();
   if (id==='exams') examRender();
   if (id==='analytics') renderAnalytics();
-  if (id==='pomodoro') { pomRenderDots(); pomUpdateDisplay(); pomUpdateStats(); pomSyncSettingsUI(); }
+  if (id==='pomodoro') { pomCheckDayRollover(); pomRenderDots(); pomUpdateDisplay(); pomUpdateStats(); pomSyncSettingsUI(); }
   if (id==='converter') setTimeout(()=>convCat('length', document.querySelector('[data-cat="length"]')),0);
   if (id==='ibpoints') ibRenderSubjects();
   if (id==='cas') casRender();
@@ -4634,11 +4635,6 @@ function cycleTag() {
   n.course=next.name; n.ccolor=next.color;
   const tag=g('doc-tag'); tag.textContent=next.name; tag.style.background=next.color+'22'; tag.style.color=next.color;
   touch();
-}
-function touch() {
-  setStatus('saving');
-  clearTimeout(saveTmr);
-  saveTmr = setTimeout(saveNote, 1500);
 }
 function saveNote() {
   if (!noteId) return;
@@ -5862,7 +5858,19 @@ function saveGrade(){
   DB.grades.push({id:'g'+Date.now(),name,course:g('gr-co').value,cat:g('gr-ca').value,mark,out,pct:Math.round(mark/out*100),wt:+g('gr-wt').value||25,date:g('gr-dt').value,notes:g('gr-nt').value});
   save(); closeMo('mo-gr'); g('gr-na').value=''; renderGrades(); renderGoals(); renderDashboard(); toast('Mark added!');
 }
-function calcAvg(){return DB.grades.length?DB.grades.reduce((s,g)=>s+g.pct,0)/DB.grades.length:0;}
+// Every grade carries a Weight % (set in the Add Mark form) but no average
+// anywhere actually used it — Overall Average, per-course averages, Grade
+// Goals progress, GPA import, and the study-time correlation were all a
+// plain unweighted mean of pct. This makes weight do what it says: a 40%
+// exam now actually counts for more than a 5% quiz. Falls back to a simple
+// mean if every entry in the set has a weight of 0 (nothing to weight by).
+function weightedAvg(gradesArr){
+  if(!gradesArr.length) return null;
+  const totalWt = gradesArr.reduce((s,g)=>s+(+g.wt||0),0);
+  if(!totalWt) return gradesArr.reduce((s,g)=>s+g.pct,0)/gradesArr.length;
+  return gradesArr.reduce((s,g)=>s+g.pct*(+g.wt||0),0)/totalWt;
+}
+function calcAvg(){return DB.grades.length?weightedAvg(DB.grades):0;}
 function lGrade(p){if(p>=90)return'A+';if(p>=85)return'A';if(p>=80)return'A-';if(p>=77)return'B+';if(p>=73)return'B';if(p>=70)return'B-';if(p>=67)return'C+';if(p>=63)return'C';if(p>=60)return'C-';if(p>=57)return'D+';if(p>=53)return'D';if(p>=50)return'D-';return'F';}
 function lKey(l){return l.startsWith('A')?'A':l.startsWith('B')?'B':l.startsWith('C')?'C':l.startsWith('D')?'D':'F';}
 function renderGrades(){
@@ -5873,7 +5881,7 @@ function renderGrades(){
   cont.innerHTML='';
   if(!DB.courses.length){cont.innerHTML='<div class="emp"><span class="ei">📊</span><p>Add courses in Settings</p></div>';return;}
   DB.courses.forEach(c=>{
-    const cg=DB.grades.filter(gg=>gg.course===c.name), ca=cg.length?cg.reduce((s,gg)=>s+gg.pct,0)/cg.length:null;
+    const cg=DB.grades.filter(gg=>gg.course===c.name), ca=cg.length?weightedAvg(cg):null;
     const cl=ca!==null?lGrade(ca):null, clk=cl?lKey(cl):'A';
     const goal=(DB.goals||[]).find(x=>x.course===c.name);
     const goalBadge = goal ? `<span class="tag" onclick="event.stopPropagation();go('goals')" title="Goal: ${goal.target}% — click to view Grade Goals" style="cursor:pointer;background:var(--acll);color:var(--ac);font-weight:700">🎯 ${goal.target}%</span>` : '';
@@ -5888,7 +5896,7 @@ function delGrade(id){DB.grades=DB.grades.filter(g=>g.id!==id);save();renderGrad
 /* ── GRADE GOALS ── */
 function courseAvg(course){
   const cg=(DB.grades||[]).filter(g=>g.course===course);
-  return cg.length ? cg.reduce((s,g)=>s+g.pct,0)/cg.length : null;
+  return cg.length ? weightedAvg(cg) : null;
 }
 // The nearest not-yet-done homework item for a course — lets a Grade Goal
 // answer "so what do I actually do about it?" instead of just showing a
@@ -5999,11 +6007,33 @@ const WP_DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 function wpMonday(d){ const x=new Date(d); const day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x; }
 function wpWeekKey(offset){ const m=wpMonday(new Date()); m.setDate(m.getDate()+offset*7); return m.toISOString().slice(0,10); }
 function wpNav(dir){ wpWeekOffset = dir===0 ? 0 : wpWeekOffset+dir; renderPlanner(); }
+// Limits the "Day" dropdown in Add Planner Item to today-or-later, based on
+// whichever week is currently being viewed — same rule as the carry-over picker.
+function wpFilterAddDayOptions(){
+  const daySel=g('wp-day'); if(!daySel) return;
+  const monday=new Date(wpWeekKey(wpWeekOffset)+'T00:00:00');
+  const todayStr=examIsoDate(new Date());
+  const cur=daySel.value;
+  const opts=[];
+  for(let d=0; d<7; d++){
+    const dt=new Date(monday); dt.setDate(dt.getDate()+d);
+    if(examIsoDate(dt) >= todayStr) opts.push(d);
+  }
+  daySel.innerHTML = opts.length
+    ? opts.map(d=>`<option value="${d}">${WP_DAYS[d]}</option>`).join('')
+    : `<option value="" disabled selected>No valid day this week</option>`;
+  if(opts.some(d=>String(d)===cur)) daySel.value=cur;
+}
 function wpSave(){
   const text=g('wp-tx').value.trim();
   if(!text){toast('Enter a task!');return;}
+  const dayVal=g('wp-day').value;
+  if(dayVal===''){ toast("Can't add items before today — pick today or later"); return; }
+  const day=+dayVal, week=wpWeekKey(wpWeekOffset);
+  const itemDate=new Date(week+'T00:00:00'); itemDate.setDate(itemDate.getDate()+day);
+  if(examIsoDate(itemDate) < examIsoDate(new Date())){ toast("Can't add items before today — pick today or later"); return; }
   if(!DB.planner) DB.planner=[];
-  DB.planner.push({id:'wp'+Date.now(), week:wpWeekKey(wpWeekOffset), day:+g('wp-day').value, text, course:g('wp-co').value||'', pr:+g('wp-pr').value||0, done:false});
+  DB.planner.push({id:'wp'+Date.now(), week, day, text, course:g('wp-co').value||'', pr:+g('wp-pr').value||0, done:false});
   save(); closeMo('mo-plan'); g('wp-tx').value=''; renderPlanner(); toast('Added to planner!');
 }
 function wpToggle(id){
@@ -6274,7 +6304,7 @@ function populateSels(){
   });
   const se=g('cls-sl'); if(se) se.innerHTML=(DB.slots||[]).map((s,i)=>`<option value="${i}">${s}</option>`).join('');
 }
-function showMo(id){g(id).classList.add('on'); if(['mo-hw','mo-hw-edit','mo-cls','mo-gr','mo-dp','mo-exam','mo-plan','mo-goal'].includes(id))populateSels(); if(id==='mo-hw'){ if(g('hw-link')) g('hw-link').value=''; clearHWFields('hw-fields'); }}
+function showMo(id){g(id).classList.add('on'); if(['mo-hw','mo-hw-edit','mo-cls','mo-gr','mo-dp','mo-exam','mo-plan','mo-goal'].includes(id))populateSels(); if(id==='mo-hw'){ if(g('hw-link')) g('hw-link').value=''; clearHWFields('hw-fields'); } if(id==='mo-plan') wpFilterAddDayOptions();}
 function closeMo(id){g(id).classList.remove('on');}
 /* In-app confirm dialog. Native window.confirm() doesn't reliably fire inside
    a sandboxed artifact iframe, so destructive actions route through this
@@ -6582,13 +6612,20 @@ const CUSTOM_COLS = [
 ];
 function buildCustomTheme(){
   const cont=g('custom-cols'); if(!cont) return;
-  cont.innerHTML=CUSTOM_COLS.map(col=>`
+  cont.innerHTML=CUSTOM_COLS.map(col=>{
+    const initial=getComputedStyle(document.documentElement).getPropertyValue(col.k.replace('--c-','--')).trim()||'#888888';
+    // Seed the --c-* property now, not just the input's displayed value — otherwise
+    // any swatch the user never touches has no --c-* value set at all, and
+    // saveCustomTheme() reads it back as '' instead of the color shown here.
+    document.documentElement.style.setProperty(col.k, initial);
+    return `
     <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
-      <input type="color" value="${getComputedStyle(document.documentElement).getPropertyValue(col.k.replace('--c-','--'))||'#888'}" 
+      <input type="color" value="${initial}"
         oninput="previewCustom('${col.k}',this.value)"
         style="width:32px;height:28px;border:1.5px solid var(--bor);border-radius:5px;cursor:pointer;-webkit-appearance:none;padding:1px"/>
       <span style="font-size:11.5px;font-weight:500">${col.l}</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 function previewCustom(k,v){document.documentElement.style.setProperty(k,v);}
 function saveCustomTheme(){
@@ -6656,7 +6693,9 @@ function handleDataDrop(ev){
       const data=JSON.parse(e.target.result);
       if(!data.p||!data.notes) throw new Error('Invalid format');
       if(!confirm('This will replace ALL your current data. Continue?')) return;
+      const extras = data._extras; delete data._extras;
       DB=data; save(); renderAll(); applyTheme(DB.p.theme||'forest'); applyFont(DB.p.font||'outfit'); applyEditorPrefs();
+      restoreBackupExtras(extras);
       logDataEvent('Restored backup', file.name);
       toast('Data imported successfully!');
     }catch(err){ toast('Error: '+err.message); }
@@ -8196,7 +8235,11 @@ function pomSetMode(m, btn) {
   pomStop();
   pomState.mode = m;
   document.querySelectorAll('.pom-tab-btn').forEach(b => b.classList.remove('on'));
-  if (btn) btn.classList.add('on');
+  // Auto-transitions (session complete, skip) call this with btn=null, so fall
+  // back to the tab that matches the new mode — otherwise no tab shows as
+  // active until the user manually clicks one.
+  const tabBtn = btn || g('pt-' + m);
+  if (tabBtn) tabBtn.classList.add('on');
   const durations = { focus: DB.pomodoro.focus||25, short: DB.pomodoro.short||5, long: DB.pomodoro.long||15 };
   pomState.secondsLeft = durations[m] * 60;
   pomUpdateDisplay();
@@ -8234,7 +8277,19 @@ function pomReset() {
 }
 function pomSkip() {
   pomStop();
-  pomComplete();
+  if (pomState.mode === 'focus') {
+    // Skipping a focus session means the time wasn't actually spent — advance
+    // to the next phase without crediting session count, minutes, the study
+    // log, or the streak (that's what pomComplete() does for a real finish).
+    pomState.currentSession++;
+    if (pomState.currentSession > pomState.totalSessions) pomState.currentSession = 1;
+    if (pomState.currentSession === 1) pomSetMode('long', null); else pomSetMode('short', null);
+    pomRenderDots();
+    toast('⏭ Focus session skipped (not counted)');
+    if (DB.pomodoro.auto) pomState.autoTimer = setTimeout(() => pomStart(), 1500);
+  } else {
+    pomComplete(); // skipping a break has no stats to protect — same as letting it finish
+  }
 }
 /* Gentle two-note chime (no harsh attack) played when a focus session or
    break ends. Built the same way as the ambient sounds above: a couple of
@@ -8267,11 +8322,14 @@ function pomComplete() {
   pomStop();
   playChime();
   if (pomState.mode === 'focus') {
+    pomCheckDayRollover(); // in case the session ran across midnight
     const mins = DB.pomodoro.focus||25;
     DB.pomodoro.todayCount = (DB.pomodoro.todayCount||0) + 1;
     DB.pomodoro.totalMinutes = (DB.pomodoro.totalMinutes||0) + mins;
     const course = g('pom-course')?.value || '';
-    DB.studyLog.push({ id:'sl'+Date.now(), ts: Date.now(), minutes: mins, course });
+    const task = g('pom-task')?.value.trim() || '';
+    DB.studyLog.push({ id:'sl'+Date.now(), ts: Date.now(), minutes: mins, course, task });
+    const taskInput = g('pom-task'); if (taskInput) taskInput.value = ''; // clear so it doesn't carry into the next session
     if (DB.studyLog.length > 3000) DB.studyLog = DB.studyLog.slice(-3000); // keep the log from growing forever
     markStreakToday(); // a completed focus session is real study time — it belongs in the streak same as finishing homework or a flashcard review
     save();
@@ -8283,8 +8341,6 @@ function pomComplete() {
     toast('🍅 Focus session complete! Take a break.');
   } else {
     pomSetMode('focus', null);
-    document.querySelector('.pom-tab-btn')?.classList.add('on');
-    document.querySelectorAll('.pom-tab-btn:not(:first-child)').forEach(b=>b.classList.remove('on'));
     toast('☕ Break over! Time to focus.');
   }
   pomRenderDots();
@@ -8356,6 +8412,16 @@ function pomFocusOn(course) {
     if (course) setSel('pom-course', course);
     toast(`🍅 Focus session ready for ${course || 'General'} — press Start when you're set.`);
   }, 30);
+}
+// DB.pomodoro.todayCount is shown as "Today: N sessions", so it needs to
+// actually reset each day — otherwise it silently becomes a lifetime total.
+function pomCheckDayRollover() {
+  const today = new Date().toISOString().slice(0,10);
+  if (DB.pomodoro.lastDate !== today) {
+    DB.pomodoro.todayCount = 0;
+    DB.pomodoro.lastDate = today;
+    save();
+  }
 }
 function pomUpdateStats() {
   const tc = g('pom-today-count'); if (tc) tc.textContent = DB.pomodoro.todayCount||0;
@@ -9001,7 +9067,7 @@ function analyticsProcrastination(period){
 function analyticsGradeStudyCorrelation(){
   const points = (DB.courses||[]).map(c => {
     const grades = (DB.grades||[]).filter(g => g.course===c.name);
-    const avgGrade = grades.length ? grades.reduce((s,g)=>s+g.pct,0)/grades.length : null;
+    const avgGrade = grades.length ? weightedAvg(grades) : null;
     const mins = (DB.studyLog||[]).filter(e => e.course===c.name).reduce((s,e)=>s+(e.minutes||0), 0);
     return { course: c.name, color: c.color, avgGrade, mins };
   }).filter(p => p.avgGrade !== null);
@@ -9391,6 +9457,29 @@ function fcMode(m) {
     fcRenderDecks();
   }
 }
+// Minimal CSV parser (quoted fields, embedded commas/quotes/newlines) so
+// fcImportDeck's .csv option — offered in the file picker but never actually
+// implemented — really works instead of always failing with a confusing
+// "Invalid file format" (JSON.parse on a CSV file always throws).
+function fcParseCSV(text) {
+  const rows = []; let row = [], field = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') { if (text[i+1] === '"') { field += '"'; i++; } else inQuotes = false; }
+      else field += c;
+    } else if (c === '"') inQuotes = true;
+    else if (c === ',') { row.push(field); field = ''; }
+    else if (c === '\n' || c === '\r') {
+      if (c === '\r' && text[i+1] === '\n') i++;
+      row.push(field); field = '';
+      if (row.some(v => v !== '')) rows.push(row);
+      row = [];
+    } else field += c;
+  }
+  if (field !== '' || row.length) { row.push(field); if (row.some(v => v !== '')) rows.push(row); }
+  return rows;
+}
 function fcImportDeck() {
   const input = document.createElement('input'); input.type='file'; input.accept='.json,.csv';
   input.onchange = e => {
@@ -9398,6 +9487,20 @@ function fcImportDeck() {
     const r = new FileReader();
     r.onload = ev => {
       try {
+        if (file.name.toLowerCase().endsWith('.csv')) {
+          let rows = fcParseCSV(ev.target.result);
+          if (!rows.length) throw new Error('empty');
+          // Skip a header row like "question,answer" or "front,back".
+          if (/^(question|front|q)$/i.test((rows[0][0]||'').trim())) rows = rows.slice(1);
+          const cards = rows.filter(cols => cols[0] && cols[1]).map(cols => ({ q: cols[0].trim(), a: cols[1].trim(), hint: (cols[2]||'').trim() }));
+          if (!cards.length) throw new Error('no cards');
+          const deckId = 'deck'+Date.now();
+          const deckName = file.name.replace(/\.csv$/i,'');
+          DB.flashcards.decks.push({ id: deckId, name: deckName, desc: '', color: '#0F6B30', courseId: '', created: Date.now() });
+          cards.forEach(c => { c.id='fc'+Date.now()+Math.random(); c.deckId=deckId; DB.flashcards.cards.push(c); });
+          save(); fcRenderDecks(); logDataEvent('Imported deck', deckName); toast(`Deck imported! (${cards.length} cards)`);
+          return;
+        }
         const data = JSON.parse(ev.target.result);
         if (data.deck && data.cards) {
           data.deck.id = 'deck'+Date.now();
