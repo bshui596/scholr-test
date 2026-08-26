@@ -8014,7 +8014,7 @@ document.addEventListener('keydown', e => {
 ═══════════════════════════════════════════════════ */
 if (!DB.pomodoro) DB.pomodoro = { focus:25, short:5, long:15, sessions:4, auto:1, alarm:1, todayCount:0, totalMinutes:0, lastDate: '' };
 if (DB.pomodoro.alarm === undefined) DB.pomodoro.alarm = 1;
-let pomState = { mode:'focus', running:false, timer:null, secondsLeft: (DB.pomodoro.focus||25)*60, currentSession:1, totalSessions: DB.pomodoro.sessions||4, flipped:false, focusOpen:false };
+let pomState = { mode:'focus', running:false, timer:null, autoTimer:null, secondsLeft: (DB.pomodoro.focus||25)*60, currentSession:1, totalSessions: DB.pomodoro.sessions||4, flipped:false, focusOpen:false };
 
 function pomSetMode(m, btn) {
   pomStop();
@@ -8045,6 +8045,7 @@ function pomStart(fromFocus) {
 function pomStop() {
   pomState.running = false;
   clearInterval(pomState.timer);
+  clearTimeout(pomState.autoTimer);
   const btn = g('pom-btn'); if (btn) btn.innerHTML = '▶ Start';
   const fb = g('focus-toggle'); if (fb) fb.textContent = '▶ Start';
   const bb = g('bonus-focus-btn'); if (bb) bb.textContent = 'Start';
@@ -8113,7 +8114,7 @@ function pomComplete() {
   pomRenderDots();
   pomUpdateStats();
   renderStreak();
-  if (DB.pomodoro.auto) setTimeout(() => pomStart(), 1500);
+  if (DB.pomodoro.auto) pomState.autoTimer = setTimeout(() => pomStart(), 1500);
 }
 function pomUpdateDisplay() {
   const m = Math.floor(pomState.secondsLeft/60), s = pomState.secondsLeft%60;
