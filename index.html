@@ -4631,8 +4631,8 @@ function slotMin(s) {
   return h*60+mn;
 }
 function setBar(id,pct) { const e=g(id); if(e) e.style.width=Math.max(0,Math.min(100,pct))+'%'; }
-function dueFmt(ds) { const d=dLeft(ds); if(d<0)return'Overdue'; if(d===0)return'Due today'; if(d===1)return'Tomorrow'; if(d<=6)return`In ${d}d`; return new Date(ds).toLocaleDateString('en-CA',{month:'short',day:'numeric'}); }
-function dLeft(ds) { const d=new Date(ds); d.setHours(23,59,59); return Math.ceil((d-new Date())/86400000); }
+function dueFmt(ds) { const d=dLeft(ds); if(d<0)return'Overdue'; if(d===0)return'Due today'; if(d===1)return'Tomorrow'; if(d<=6)return`In ${d}d`; return parseLocalDate(ds).toLocaleDateString('en-CA',{month:'short',day:'numeric'}); }
+function dLeft(ds) { const d=parseLocalDate(ds); d.setHours(23,59,59); return Math.ceil((d-new Date())/86400000); }
 
 /* ── HOMEWORK ── */
 function saveHW() {
@@ -7500,13 +7500,18 @@ function calToday() {
 
 function renderCalendar() {
   if (!g('cal-grid')) return;
-  renderMiniCal();
-  renderCalCals();
   const v = calState.view;
   if (v === 'month') renderMonthView();
   else if (v === 'week') renderWeekView();
   else if (v === 'day') renderDayView();
   else if (v === 'agenda') renderAgendaView();
+  // Mini calendar and calendar list must render AFTER the main view above,
+  // because renderMonthView/renderAgendaView are what sync
+  // calState.miniYear/miniMonth to the current calState.year/month. Rendering
+  // the mini calendar first meant it always displayed the *previous*
+  // month/year — one click behind the main view.
+  renderMiniCal();
+  renderCalCals();
 }
 
 /* ── MINI CALENDAR ── */
@@ -7543,10 +7548,13 @@ function renderMiniCal() {
 }
 
 function calMiniNav(dir) {
-  calState.miniMonth += dir;
-  if (calState.miniMonth > 11) { calState.miniMonth = 0; calState.miniYear++; }
-  if (calState.miniMonth < 0) { calState.miniMonth = 11; calState.miniYear--; }
-  renderMiniCal();
+  // The mini calendar used to have its own independent miniMonth/miniYear
+  // that only it read/wrote — clicking ITS arrows never touched the main
+  // header's month, so the two could drift out of sync and stay that way
+  // until the main view was navigated again. Route through calNav so the
+  // mini calendar's arrows and the main header's arrows always drive the
+  // exact same state and can never disagree.
+  calNav(dir);
 }
 
 function calMiniClick(y, m, d) {
@@ -7713,9 +7721,16 @@ function importICS(){
   };
   inp.click();
 }
+function parseLocalDate(s) {
+  // Parses a "YYYY-MM-DD" string as a LOCAL calendar date, not UTC.
+  // (new Date("YYYY-MM-DD") parses as UTC midnight, which shifts back
+  // a day in any timezone behind UTC once rendered locally.)
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
 function getEventOccurrences(ev, rangeStart, rangeEnd) {
   const results = [];
-  const start = new Date(ev.startDate);
+  const start = parseLocalDate(ev.startDate);
   const end = rangeEnd || new Date(new Date().getFullYear()+1, 11, 31);
   const rStart = rangeStart || new Date(new Date().getFullYear()-1, 0, 1);
 
@@ -7724,7 +7739,7 @@ function getEventOccurrences(ev, rangeStart, rangeEnd) {
     return results;
   }
 
-  const repeatEnd = ev.repeatEnd ? new Date(ev.repeatEnd) : new Date(new Date().getFullYear()+2, 11, 31);
+  const repeatEnd = ev.repeatEnd ? parseLocalDate(ev.repeatEnd) : new Date(new Date().getFullYear()+2, 11, 31);
   const isCustom = ev.repeat === 'custom';
   const freq = isCustom ? (ev.customFreq || 1) : 1;
   const period = isCustom ? (ev.customPeriod || 'week') : (ev.repeat === 'daily' ? 'day' : ev.repeat === 'weekly' ? 'week' : ev.repeat === 'biweekly' ? 'week' : ev.repeat === 'monthly' ? 'month' : 'year');
@@ -7824,6 +7839,7 @@ function renderWeekView() {
   const we = new Date(ws); we.setDate(we.getDate() + 6);
   const now = new Date();
   const visCals = getVisibleCals();
+  calState.miniYear = ws.getFullYear(); calState.miniMonth = ws.getMonth();
 
   // Header label
   const sameMonth = ws.getMonth() === we.getMonth();
@@ -7924,6 +7940,7 @@ function renderDayView() {
   const isToday = dt.toDateString() === now.toDateString();
   const visCals = getVisibleCals();
   const dateStr = ymdLocal(dt);
+  calState.miniYear = dt.getFullYear(); calState.miniMonth = dt.getMonth();
 
   setText('cal-hd-label', dt.toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric',year:'numeric'}));
 
