@@ -336,6 +336,9 @@ img{max-width:100%}
 .pill{padding:4px 12px;border-radius:99px;border:1px solid var(--bor);background:var(--sur);font-size:11.5px;font-weight:600;cursor:pointer;color:var(--ink3);transition:all .12s}
 .pill:hover{border-color:var(--ac2);color:var(--ac)}.pill.on{background:var(--acll);border-color:var(--acl);color:var(--ac)}
 .pill-bar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
+/* Per-screen "back to dashboard" button — shown on every page except the dashboard itself */
+.pg-home-btn{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:99px;background:var(--s2);color:var(--ink3);border:1px solid var(--bor);margin-bottom:12px;cursor:pointer}
+.pg-home-btn:hover{background:var(--acll);color:var(--ac);border-color:var(--acl)}
 
 /* ══════════════════════════════════════════
    DASHBOARD
@@ -843,11 +846,14 @@ img{max-width:100%}
 /* Calendar list items */
 .cal-cal-item{display:flex;align-items:center;gap:7px;padding:4px 0;cursor:pointer;font-size:12px}
 
-/* Embedded calendar */
-.cal-embed-shell{width:100%;height:calc(100vh - 180px);min-height:620px;border:1px solid var(--bor);border-radius:var(--rad);overflow:hidden;background:var(--sur);box-shadow:var(--sh1)}
-.cal-embed-shell iframe{display:block;width:100%;height:100%;border:0;background:#fff}
+/* Calendar page layout */
+.cal-layout{display:flex;gap:18px;align-items:flex-start}
+.cal-sidebar{width:230px;flex-shrink:0}
+.cal-main{flex:1;min-width:0;overflow-x:auto;border:1px solid var(--bor);border-radius:var(--rad);background:var(--sur)}
 @media (max-width: 920px){
-  .cal-embed-shell{height:70vh;min-height:480px}
+  .cal-layout{flex-direction:column}
+  .cal-sidebar{width:100%;display:flex;gap:24px;flex-wrap:wrap}
+  .cal-sidebar #cal-mini{width:230px;margin-bottom:0}
 }
 .cal-cal-item input[type=checkbox]{accent-color:var(--ac);flex-shrink:0}
 .cal-cal-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
@@ -1034,9 +1040,9 @@ img{max-width:100%}
 </style>
 <style>
 /* Split-screen overlay styles (larger by default) */
-#split-ov{position:fixed;inset:0;display:none;z-index:12000;background:rgba(8,12,10,.6);align-items:center;justify-content:center;padding:12px}
+#split-ov{position:fixed;inset:0;display:none;z-index:60;background:rgba(8,12,10,.6);align-items:center;justify-content:center;padding:12px}
 #split-ov.on{display:flex}
-.split-top{position:absolute;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:12001}
+.split-top{position:absolute;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:61}
 .split-body{display:flex;width:96%;height:88%;background:var(--sur);border-radius:12px;overflow:hidden;border:1px solid var(--bor);box-shadow:var(--sh3)}
 .split-pane{width:50%;height:100%;overflow:auto;background:var(--bg);padding:8px}
 .split-pane iframe, #embed-frame, #desmos-frame{width:100%;height:100%;border:0;min-height:360px}
@@ -1075,13 +1081,29 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 
   window._splitEmbed = 'desmos';
+  // Track where the real #ps node came from so we can put it back on close.
+  window._splitPsHome = null;
   window.openSplit = function(rightType){
     const ov=document.getElementById('split-ov');
     const left=document.getElementById('split-left');
     const right=document.getElementById('split-right');
-    // copy main content into left pane
-    const main = document.querySelector('.ps');
-    left.innerHTML = main ? main.innerHTML : '<div style="padding:14px">No main content</div>';
+    // Move the LIVE page content into the left pane instead of copying its
+    // innerHTML. Cloning innerHTML produced a second copy of every id on the
+    // page (pg-dashboard, d-hw, etc.); go()/g() always resolve to the FIRST
+    // element with a given id, which was the original (hidden) copy behind
+    // the overlay — so clicking a dashboard button silently navigated the
+    // hidden page instead of the one visible in the split pane. Moving the
+    // real node keeps ids unique and interactive wherever it currently sits.
+    const main = document.getElementById('ps');
+    if (main && !window._splitPsHome) {
+      window._splitPsHome = { parent: main.parentNode, next: main.nextSibling };
+    }
+    if (main) {
+      left.innerHTML = '';
+      left.appendChild(main);
+    } else if (!left.contains(document.getElementById('ps'))) {
+      left.innerHTML = '<div style="padding:14px">No main content</div>';
+    }
     // choose embed
     const type = rightType || window._splitEmbed || 'desmos';
     setSplitEmbed(type);
@@ -1095,8 +1117,12 @@ document.addEventListener('DOMContentLoaded',function(){
     const urls = { desmos:'https://www.desmos.com/calculator', gcal:'https://calendar.google.com/calendar/embed?mode=WEEK', quizlet:'https://quizlet.com/', geogebra:'https://www.geogebra.org/graphing' };
     // build container with iframe + fallback area
     if(type==='calendar'){
+      // Render the built-in calendar (into the always-in-DOM #pg-calendar)
+      // before cloning it, so this works even if the user hasn't opened
+      // the Calendar page yet this session.
+      renderCalendar();
       const cal = document.getElementById('cal-grid');
-      const localHtml = cal ? cal.cloneNode(true).outerHTML : '<div style="padding:14px">Calendar not found</div>';
+      const localHtml = cal && cal.innerHTML.trim() ? cal.cloneNode(true).outerHTML : '<div style="padding:14px">Calendar not found</div>';
       right.innerHTML = `
         <div style="display:flex;flex-direction:column;height:100%">
           <div style="padding:10px;display:flex;gap:8px;align-items:center">
@@ -1142,8 +1168,32 @@ document.addEventListener('DOMContentLoaded',function(){
 
   
 
-  window.closeSplit = function(){const ov=document.getElementById('split-ov'); if(ov) ov.classList.remove('on'); document.body.style.overflow='';};
-  window.splitSwap = function(){const L=document.getElementById('split-left'), R=document.getElementById('split-right'); [L.innerHTML,R.innerHTML]=[R.innerHTML,L.innerHTML];};
+  window.closeSplit = function(){
+    const ov=document.getElementById('split-ov'); if(ov) ov.classList.remove('on'); document.body.style.overflow='';
+    // Put the real #ps node back where it came from so the app behaves
+    // normally again — it may currently be in either pane if the user
+    // used Swap while split was open.
+    const home = window._splitPsHome;
+    if (home) {
+      const main = document.getElementById('ps');
+      if (main) {
+        if (home.next && home.next.parentNode === home.parent) home.parent.insertBefore(main, home.next);
+        else home.parent.appendChild(main);
+      }
+      window._splitPsHome = null;
+    }
+  };
+  window.splitSwap = function(){
+    // Swap the actual DOM nodes between panes rather than swapping
+    // innerHTML strings. innerHTML swaps re-parse everything into brand
+    // new elements, which throws away the live #ps node (and any embedded
+    // iframes) and re-creates it as an inert copy with no working buttons.
+    const L=document.getElementById('split-left'), R=document.getElementById('split-right');
+    const leftChildren = Array.from(L.childNodes);
+    const rightChildren = Array.from(R.childNodes);
+    leftChildren.forEach(n => R.appendChild(n));
+    rightChildren.forEach(n => L.appendChild(n));
+  };
   window.setSplitSize = function(p){const L=document.getElementById('split-left'), R=document.getElementById('split-right'); L.style.width = p+'%'; R.style.width = (100-p)+'%';};
 
   // resizer drag
@@ -1474,6 +1524,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- HOMEWORK -->
         <div class="pg" id="pg-homework">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div class="pill-bar" id="hw-pills"></div>
           <div class="kanban">
             <div class="kcol"><div class="kcol-hd">📌 To Do <span class="kcc" id="kc-todo">0</span></div><div id="col-todo"></div><button class="k-add" onclick="showMo('mo-hw')">+ Add assignment</button></div>
@@ -1484,6 +1535,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- DRIVE -->
         <div class="pg" id="pg-drive">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <!-- Drive toolbar -->
           <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
             <div class="tb-search" style="flex:1;max-width:280px">
@@ -1503,6 +1555,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- TIMETABLE -->
         <div class="pg" id="pg-timetable">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
             <div style="display:flex;align-items:center;gap:6px;flex:1">
               <button class="icon-btn" onclick="ttNav(-1)">←</button>
@@ -1536,6 +1589,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- DAY PLAN -->
         <div class="pg" id="pg-dayplan">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div class="dp-wrap">
             <div>
               <div class="row-hd" style="margin-bottom:14px">
@@ -1568,6 +1622,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- PLAN MY DAY -->
         <div class="pg" id="pg-planday">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div class="row-hd" style="margin-bottom:14px;align-items:flex-start">
             <div>
               <div style="font-family:var(--font-h);font-size:19px;font-weight:700">Plan My Day</div>
@@ -1623,6 +1678,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- WEEKLY PLANNER -->
         <div class="pg" id="pg-planner">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div class="row-hd" style="margin-bottom:14px;align-items:flex-start;flex-wrap:wrap;gap:10px">
             <div>
               <div style="font-family:var(--font-h);font-size:19px;font-weight:700">🗂️ Weekly Planner</div>
@@ -1643,18 +1699,37 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- CALENDAR -->
         <div class="pg" id="pg-calendar">
-          <div class="cal-embed-shell">
-            <iframe
-              src="https://str-calender.netlify.app/"
-              title="Embedded Calendar"
-              loading="lazy"
-              referrerpolicy="strict-origin-when-cross-origin"
-              allowfullscreen>
-            </iframe>
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
+          <div class="row-hd" style="align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+            <button class="btn bo sm" onclick="calToday()">Today</button>
+            <button class="icon-btn" onclick="calNav(-1)" title="Previous">‹</button>
+            <button class="icon-btn" onclick="calNav(1)" title="Next">›</button>
+            <div class="sec-lbl" id="cal-hd-label" style="margin:0;flex:1;min-width:120px"></div>
+            <div style="display:flex;gap:2px;background:var(--s2);border-radius:7px;padding:2px">
+              <button class="cal-view-btn on" data-v="month" onclick="calView('month')">Month</button>
+              <button class="cal-view-btn" data-v="week" onclick="calView('week')">Week</button>
+              <button class="cal-view-btn" data-v="day" onclick="calView('day')">Day</button>
+              <button class="cal-view-btn" data-v="agenda" onclick="calView('agenda')">Agenda</button>
+            </div>
+            <button class="btn bp sm" onclick="calNewEvent()">+ New Event</button>
+          </div>
+          <div class="cal-layout">
+            <div class="cal-sidebar">
+              <div id="cal-mini" style="margin-bottom:18px"></div>
+              <div class="row-hd" style="align-items:center;margin-bottom:8px">
+                <div class="sec-lbl" style="margin:0;font-size:11px">My Calendars</div>
+                <button class="icon-btn" onclick="calNewCal()" title="New calendar">+</button>
+              </div>
+              <div id="cal-cals"></div>
+            </div>
+            <div class="cal-main">
+              <div id="cal-grid"></div>
+            </div>
           </div>
         </div>
 
         <div class="pg" id="pg-checklist">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div class="row-hd" style="align-items:center;gap:10px;margin-bottom:14px">
             <div class="sec-lbl">Checklist</div>
             <button class="btn bp sm" onclick="checklistAdd()">+ Add item</button>
@@ -1671,6 +1746,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- GRADES -->
         <div class="pg" id="pg-grades">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div class="gb-sum" id="gb-sum"></div>
           <div class="row-hd"><div class="sec-lbl">Marks by Course</div><button class="btn bp sm" onclick="showMo('mo-gr')">+ Add Mark</button></div>
           <div id="gb-cr"></div>
@@ -1678,6 +1754,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- GRADE GOALS -->
         <div class="pg" id="pg-goals">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div class="row-hd" style="margin-bottom:14px">
             <div>
               <div style="font-family:var(--font-h);font-size:19px;font-weight:700">🏆 Grade Goals</div>
@@ -1690,6 +1767,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- RUBRIC -->
         <div class="pg" id="pg-rubric">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div style="background:var(--acll);border:1.5px solid var(--acl);border-radius:var(--rad);padding:11px 14px;margin-bottom:16px;font-size:13px;color:var(--ink2);line-height:1.6">
             🧾 <strong>Rubric</strong> is a flexible 5x5 evaluation chart. Use it to score knowledge, understanding, application and communication.
           </div>
@@ -1701,6 +1779,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- GPA CALCULATOR -->
         <div class="pg" id="pg-gpa">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div style="max-width:920px; width:100%; margin:0 auto;">
             <div class="row-hd" style="margin-bottom:16px">
               <div><div class="sec-lbl">GPA Calculator</div><div style="font-size:12px;color:var(--ink4);margin-top:2px">Enter your courses to calculate weighted & unweighted GPA</div></div>
@@ -1751,6 +1830,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- FLASHCARDS -->
         <div class="pg" id="pg-flashcards">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
             <div style="flex:1">
               <div style="font-family:var(--font-h);font-size:20px;font-weight:600">🃏 Flashcards</div>
@@ -1819,6 +1899,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- EXAM PLANNER -->
         <div class="pg" id="pg-exams">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
             <div style="flex:1">
               <div style="font-family:var(--font-h);font-size:20px;font-weight:600">⏳ Exam Planner</div>
@@ -1831,6 +1912,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- STUDY OVERVIEW (ANALYTICS) -->
         <div class="pg" id="pg-analytics">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
             <div style="flex:1">
               <div style="font-family:var(--font-h);font-size:20px;font-weight:600">📊 Study Overview</div>
@@ -1911,6 +1993,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- POMODORO PAGE -->
         <div class="pg" id="pg-pomodoro">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div style="max-width:520px;margin:0 auto">
             <div style="text-align:center;margin-bottom:24px">
               <h2 style="font-family:var(--font-h);font-size:24px;font-weight:600;margin-bottom:4px">🍅 Pomodoro Timer</h2>
@@ -1980,6 +2063,7 @@ document.addEventListener('DOMContentLoaded',function(){
         <!-- UNIT CONVERTER -->
         <!-- EMBEDDED TOOLS -->
         <div class="pg" id="pg-embeds">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div class="greet" style="margin-bottom:14px">
             <h1>🧮 Embedded Tools</h1>
             <p style="color:var(--ink4);font-size:12.5px">Full external tools embedded right in Scholr</p>
@@ -1996,6 +2080,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- DESMOS DEDICATED PAGE -->
         <div class="pg" id="pg-desmos">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div class="greet" style="margin-bottom:14px">
             <h1>📈 Desmos</h1>
             <p style="color:var(--ink4);font-size:12.5px">A dedicated Desmos page with larger embed and quick controls.</p>
@@ -2012,6 +2097,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- CONVERTER -->
         <div class="pg" id="pg-converter">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div style="max-width:920px; width:100%; margin:0 auto;">
             <div style="margin-bottom:20px">
               <div style="font-family:var(--font-h);font-size:22px;font-weight:600;margin-bottom:4px">⚖️ Unit Converter</div>
@@ -2061,6 +2147,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- IB DIPLOMA POINTS -->
         <div class="pg" id="pg-ibpoints">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div style="max-width:920px; width:100%; margin:0 auto;">
             <div class="greet" style="margin-bottom:16px">
               <h1>🎓 IB Diploma Points</h1>
@@ -2099,6 +2186,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- CAS TRACKER -->
         <div class="pg" id="pg-cas">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div style="max-width:920px; width:100%; margin:0 auto;">
             <div class="greet" style="margin-bottom:16px">
               <h1>🌱 CAS Tracker</h1>
@@ -2116,6 +2204,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- ADMIN (hidden — only reachable via the admin unlock code) -->
         <div class="pg" id="pg-admin">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div style="max-width:820px">
             <div class="greet" style="margin-bottom:16px;background:linear-gradient(135deg,var(--ac),var(--ac2));border-radius:14px;padding:20px 22px;color:var(--on-ac,#fff)">
               <h1 style="color:var(--on-ac,#fff)">🔑 Admin Mode</h1>
@@ -2148,6 +2237,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- IMPORT & EXPORT -->
         <div class="pg" id="pg-data">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div style="max-width:820px">
             <div class="greet" style="margin-bottom:16px">
               <h1>📤 Import &amp; Export</h1>
@@ -2224,6 +2314,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- SETTINGS -->
         <div class="pg" id="pg-settings">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div class="set-tabs">
             <button class="set-tab on" data-tab="profile" onclick="sTab('profile')">👤 Profile</button>
             <button class="set-tab" data-tab="appear" onclick="sTab('appear')">🎨 Appearance</button>
@@ -2360,6 +2451,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
         <!-- GUIDE -->
         <div class="pg" id="pg-guide">
+          <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard">🏠 Home</button>
           <div style="max-width:820px">
             <div class="greet" style="margin-bottom:20px">
               <h1>Getting started with Scholr 📗</h1>
@@ -2398,7 +2490,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
             <div class="card" style="padding:18px;margin-bottom:14px">
               <h3 style="font-family:var(--font-h);font-size:16px;margin-bottom:8px">7 · Share &amp; sync</h3>
-              <p style="font-size:13px;line-height:1.7;color:var(--ink3)">Your workspace syncs to the cloud automatically (see the ☁️ status pill in the top bar) so it follows you across devices. To share a single note, open it and click <strong>🔗 Share</strong> for a 6-digit code anyone can import — treat codes like a link, since anyone who has one can view that note.</p>
+              <p style="font-size:13px;line-height:1.7;color:var(--ink3)">Your workspace syncs to the cloud automatically (see the ☁️ status pill in the top bar) so it follows you across devices. To share a single note, open it and click <strong>🔗 Share</strong> for an 8-character code anyone can import — treat codes like a link, since anyone who has one can view that note.</p>
             </div>
 
             <div class="card" style="padding:18px">
@@ -2420,6 +2512,7 @@ document.addEventListener('DOMContentLoaded',function(){
         <!-- Col 1 -->
         <div class="nl">
           <div class="nl-top">
+            <button class="pg-home-btn" onclick="go('dashboard')" title="Back to Dashboard" aria-label="Back to dashboard" style="margin-bottom:8px">🏠 Home</button>
             <div class="nl-search"><span style="color:var(--ink4);font-size:11px">🔍</span><input placeholder="Search notes…" oninput="nlSearch(this.value)" autocomplete="off"/></div>
             <div style="display:flex;gap:5px">
               <button class="btn bp sm" style="flex:1;justify-content:center" onclick="newNote()">+ New</button>
@@ -2865,11 +2958,11 @@ document.addEventListener('DOMContentLoaded',function(){
         <input type="hidden" id="share-code-inp"/>
       </div>
       <button class="btn bo sm" style="width:100%;justify-content:center;margin-bottom:6px" onclick="navigator.clipboard?.writeText(g('share-code-inp').value).then(()=>toast('Code copied!'))">📋 Copy Code</button>
-      <p style="font-size:11px;color:var(--ink4);line-height:1.5">Share this 6-digit code with anyone — works across any device or browser. Anyone with the code can view and import this note's content, so don't share codes for private notes.</p>
+      <p style="font-size:11px;color:var(--ink4);line-height:1.5">Share this code with anyone — works across any device or browser. Anyone with the code can view and import this note's content, so don't share codes for private notes.</p>
     </div>
     <div>
       <div class="sec-lbl" style="margin-bottom:8px">Import a Shared Note</div>
-      <div class="fr"><label class="fl">Enter 6-digit code</label><input class="fi" id="import-code" placeholder="e.g. 482931" maxlength="6" style="font-family:var(--font-m);font-size:18px;letter-spacing:4px;text-align:center" autocomplete="off"/></div>
+      <div class="fr"><label class="fl">Enter share code</label><input class="fi" id="import-code" placeholder="e.g. 7K4PXQ9M" maxlength="8" style="font-family:var(--font-m);font-size:18px;letter-spacing:4px;text-align:center;text-transform:uppercase" autocomplete="off"/></div>
       <button class="btn bp sm" style="width:100%;justify-content:center" onclick="importSharedNote()">Import Note</button>
     </div>
   </div>
@@ -3334,7 +3427,7 @@ const FONT_URLS = {
   rubik:'Rubik:wght@300;400;500;600;700',
   poppins:'Poppins:wght@300;400;500;600;700'
 };
-const AVATARS = ['🎓','📚','🦊','🐻','🦁','🐯','🦋','🌟','🎯','🚀','⚡','🌈','🎸','🏆','🦄','🧑‍💻','🧪','✏️','🎵','🖕','🫃','🫄','🍑','🥜'];
+const AVATARS = ['🎓','📚','🦊','🐻','🦁','🐯','🦋','🌟','🎯','🚀','⚡','🌈','🎸','🏆','🦄','🧑‍💻','🧪','✏️','🎵','🐨','🐢','🦉'];
 // Legacy rubric strands removed. Homework now uses links and custom fields.
 const DP_COL = {Study:'#1D4ED8',Class:'#0F6B30',Break:'#B45309',Exercise:'#BE185D',Meal:'#0F766E',Other:'#374151',Overdue:'#B91C1C',Exam:'#7C3AED'};
 const GR_CLR = {A:{bg:'#D1FAE5',fg:'#065F46'},B:{bg:'#DBEAFE',fg:'#1E40AF'},C:{bg:'#FEF3C7',fg:'#92400E'},D:{bg:'#FEE2E2',fg:'#B91C1C'},F:{bg:'#FECACA',fg:'#7F1D1D'}};
@@ -4213,10 +4306,7 @@ function go(id) {
   if (id==='goals') renderGoals();
   if (id==='checklist') renderChecklist();
   if (id==='rubric') renderRubric();
-  // pg-calendar is an embedded external calendar (iframe) — the old
-  // built-in calendar DOM (cal-grid, cal-mini, cal-cals, cal-hd-label)
-  // no longer exists on this page, so renderCalendar()/renderMonthView()
-  // etc. would throw trying to set innerHTML on null. Nothing to render.
+  if (id==='calendar') renderCalendar();
   if (id==='settings') { renderSettings(); sTab('profile'); }
   if (id==='gpa') { renderGPA(); renderGPAScaleRef(); }
   if (id==='flashcards') fcRenderDecks();
@@ -4590,7 +4680,7 @@ function renderNotesList(q='', cfilt) {
     const lbl=document.createElement('div'); lbl.className='nl-grp'; lbl.textContent=gg; cont.appendChild(lbl);
     ns.forEach(n=>{
       const d=document.createElement('div'); d.className=`nl-item ${noteId===n.id?'on':''}`; d.dataset.id=n.id;
-      d.innerHTML=`<div class="nl-t">${n.title||'Untitled'}</div><div class="nl-m">${relTime(n.updated)}</div><button class="nl-share" onclick="shareNote('${n.id}');event.stopPropagation()" title="Share">🔗</button><button class="nl-del" onclick="delNote('${n.id}',event)">✕</button>`;
+      d.innerHTML=`<div class="nl-t">${escapeHTML(n.title||'Untitled')}</div><div class="nl-m">${relTime(n.updated)}</div><button class="nl-share" onclick="shareNote('${n.id}');event.stopPropagation()" title="Share">🔗</button><button class="nl-del" onclick="delNote('${n.id}',event)">✕</button>`;
       d.onclick=e=>{ if(!e.target.classList.contains('nl-del')) openNote(n.id); };
       cont.appendChild(d);
     });
@@ -5796,7 +5886,7 @@ function rmDpBlock(dn,idx){
 // activity that left the streak untouched. All of those now feed it too.
 function markStreakToday(){
   if(!DB.streak) DB.streak=[];
-  const dk=new Date().toISOString().slice(0,10);
+  const dk=ymdLocal();
   if(!DB.streak.includes(dk)){ DB.streak.push(dk); return true; }
   return false;
 }
@@ -5808,7 +5898,7 @@ function getStreakCount(){
   let cnt = 0;
   for (let i = 0; ; i++) {
     const d = new Date(today); d.setDate(d.getDate() - i);
-    if (streak.includes(d.toISOString().slice(0, 10))) cnt++; else break;
+    if (streak.includes(ymdLocal(d))) cnt++; else break;
   }
   return cnt;
 }
@@ -5822,7 +5912,7 @@ function renderStreak(){
   if(grid){
     const today=new Date();
     grid.innerHTML='';
-    for(let i=27;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);const dk=d.toISOString().slice(0,10);const isToday=i===0,done=streak.includes(dk);const div=document.createElement('div');div.className=`s-day ${done?'done':isToday?'today':'empty'}`;div.title=dk;grid.appendChild(div);}
+    for(let i=27;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);const dk=ymdLocal(d);const isToday=i===0,done=streak.includes(dk);const div=document.createElement('div');div.className=`s-day ${done?'done':isToday?'today':'empty'}`;div.title=dk;grid.appendChild(div);}
   }
   const cnt = getStreakCount();
   setText('dp-sv',cnt);
@@ -6005,7 +6095,7 @@ function renderDGoals(){
 let wpWeekOffset = 0;
 const WP_DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 function wpMonday(d){ const x=new Date(d); const day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x; }
-function wpWeekKey(offset){ const m=wpMonday(new Date()); m.setDate(m.getDate()+offset*7); return m.toISOString().slice(0,10); }
+function wpWeekKey(offset){ const m=wpMonday(new Date()); m.setDate(m.getDate()+offset*7); return ymdLocal(m); }
 function wpNav(dir){ wpWeekOffset = dir===0 ? 0 : wpWeekOffset+dir; renderPlanner(); }
 // Limits the "Day" dropdown in Add Planner Item to today-or-later, based on
 // whichever week is currently being viewed — same rule as the carry-over picker.
@@ -6045,7 +6135,7 @@ function wpToggle(id){
   }
   save(); renderPlanner();
 }
-function wpWeekKeyForDate(dateStr){ return wpMonday(new Date(dateStr+'T00:00:00')).toISOString().slice(0,10); }
+function wpWeekKeyForDate(dateStr){ return ymdLocal(wpMonday(new Date(dateStr+'T00:00:00'))); }
 function wpDayIndexForDate(dateStr){ return (new Date(dateStr+'T00:00:00').getDay()+6)%7; }
 // Pulls an exam's study-plan tasks into the Weekly Planner, placed on the
 // correct week/day for each task's date. Safe to call repeatedly — tasks
@@ -6652,7 +6742,7 @@ function trackFmtState(){
 }
 
 /* ── DATA EXPORT / IMPORT ── */
-function todayStr(){ return new Date().toISOString().slice(0,10); }
+function todayStr(){ return ymdLocal(); }
 function dlBlob(content, filename, mime){
   const blob=new Blob([content],{type:mime});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click();
@@ -6818,12 +6908,24 @@ function fcExportAllDecks(){
 const SHARE_KEY = 'scholr_shares'; // legacy same-browser fallback store
 function getShares(){ try{ return JSON.parse(localStorage.getItem(SHARE_KEY)||'{}'); }catch(e){ return {}; } }
 function saveShares(s){ localStorage.setItem(SHARE_KEY,JSON.stringify(s)); }
+// 8 random alphanumeric chars (~2×10^14 possibilities) instead of a 6-digit
+// number (1,000,000 possibilities), which was small enough to brute-force
+// by just trying codes against the shared store.
+function genShareCode(){
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I to avoid ambiguity
+  let s='';
+  for (let i=0;i<8;i++) s+=chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
 
 async function shareNote(id){
   const n=DB.notes.find(x=>x.id===id); if(!n) return;
   if (!DB.myShares) DB.myShares=[];
   const existing = DB.myShares.find(s=>s.noteId===id);
-  const code = existing ? existing.code : Math.floor(100000+Math.random()*900000).toString();
+  // 8 random alphanumeric chars (~2×10^14 possibilities) instead of a
+  // 6-digit number (1,000,000 possibilities) — the old range was small
+  // enough to brute-force by just trying codes against the shared store.
+  const code = existing ? existing.code : genShareCode();
   const payload = {noteId:id, owner:DB.p.name||'A Scholr user', title:n.title||'Untitled', content:n.content, shared:new Date().toISOString()};
 
   if (CLOUD_ON) {
@@ -6846,8 +6948,8 @@ async function shareNote(id){
   renderSharedList();
 }
 async function importSharedNote(){
-  const code=g('import-code')?.value?.trim();
-  if(!code||code.length!==6){toast('Enter a valid 6-digit code');return;}
+  const code=g('import-code')?.value?.trim().toUpperCase();
+  if(!code||code.length<6){toast('Enter a valid share code');return;}
   let data=null;
   if (CLOUD_ON) {
     try {
@@ -6857,11 +6959,16 @@ async function importSharedNote(){
   }
   if (!data) { const shares=getShares(); data = shares[code]; }
   if(!data){toast('Code not found or expired');return;}
-  const newNote={id:'n'+Date.now(),title:data.title+' (shared)',sub:'Shared by '+data.owner,
+  // data.content/title/owner came from another user's browser via a flat,
+  // unauthenticated share store — treat as untrusted and sanitize before
+  // it ever gets inserted into the editor via innerHTML (see openNote()).
+  const safeTitle = String(data.title||'Untitled').slice(0,200);
+  const safeOwner = String(data.owner||'A Scholr user').slice(0,200);
+  const newNote={id:'n'+Date.now(),title:safeTitle+' (shared)',sub:'Shared by '+safeOwner,
     course:DB.courses[0]?.name||'General',ccolor:DB.courses[0]?.color||'#0F6B30',
-    content:data.content,created:new Date().toISOString(),updated:new Date().toISOString()};
+    content:sanitizeSharedHTML(data.content),created:new Date().toISOString(),updated:new Date().toISOString()};
   DB.notes.unshift(newNote); save(); renderNotesList();
-  closeMo('mo-share'); toast('Note imported: '+data.title);
+  closeMo('mo-share'); toast('Note imported: '+safeTitle);
 }
 async function revokeShare(code){
   if (CLOUD_ON) { try { await window.storage.delete('share:'+code, true); } catch(e) {} }
@@ -7098,7 +7205,7 @@ function toast(msg){const t=g('toast');t.textContent=msg;t.classList.add('on');c
 const NOTIF_ICON = {hw:'📋', exam:'⏳', goal:'🏆', plan:'↷'};
 function pushNotif(type, msg, key){
   if (!DB.notifs) DB.notifs = [];
-  const today = new Date().toISOString().slice(0,10);
+  const today = ymdLocal();
   if (key && DB.notifs.some(n=>n.key===key && n.date===today)) return;
   DB.notifs.unshift({id:'nt'+Date.now()+Math.random().toString(36).slice(2,6), type, msg, date:today, read:false, key:key||null});
   DB.notifs = DB.notifs.slice(0,40);
@@ -7156,7 +7263,7 @@ document.addEventListener('click', e => {
    on load is bad UX and often gets auto-denied. ── */
 function checkDueReminders(){
   generateNotifs(); save(); renderNotifCenter();
-  const today = new Date().toISOString().slice(0,10);
+  const today = ymdLocal();
   if (DB.lastReminderDate === today) return;
   DB.lastReminderDate = today; save();
   const pending = (DB.hw||[]).filter(h=>h.status!=='done' && h.due);
@@ -7259,6 +7366,34 @@ function paletteKeyNav(e){
 
 /* ── HELPERS ── */
 function g(id){return document.getElementById(id);}
+// Escape untrusted text before interpolating it into an innerHTML template
+// (e.g. note titles, which may come from an imported/shared note).
+function escapeHTML(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+// Strip anything that could execute script from HTML content pulled in
+// from an untrusted source (shared notes). Removes script/style/iframe/
+// object/embed elements, event-handler attributes (onclick, onerror...),
+// and javascript: URLs, while leaving normal formatting markup intact.
+function sanitizeSharedHTML(html){
+  const doc = new DOMParser().parseFromString(String(html||''), 'text/html');
+  doc.querySelectorAll('script,style,iframe,object,embed,link,meta,base,form').forEach(el=>el.remove());
+  doc.querySelectorAll('*').forEach(el=>{
+    [...el.attributes].forEach(attr=>{
+      const n=attr.name.toLowerCase(), v=attr.value.trim().toLowerCase();
+      if (n.startsWith('on') || ((n==='href'||n==='src')&&v.startsWith('javascript:'))) el.removeAttribute(attr.name);
+    });
+  });
+  return doc.body.innerHTML;
+}
+// Local-timezone YYYY-MM-DD (do NOT use toISOString() for calendar-day keys —
+// toISOString() converts to UTC, which rolls "today" over hours before local
+// midnight for anyone west of UTC).
+function ymdLocal(d){
+  d = d ? new Date(d) : new Date();
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
 function setText(id,v){const e=g(id);if(e)e.textContent=v;}
 function setValue(id,v){const e=g(id);if(e)e.value=v||'';}
 function setSel(id,val){const e=g(id);if(!e)return;for(let o of e.options)if(o.value===val||o.text===val){o.selected=true;return;}}
@@ -7364,10 +7499,6 @@ function calToday() {
 }
 
 function renderCalendar() {
-  // pg-calendar now hosts an embedded external calendar (iframe); the
-  // built-in calendar DOM (cal-grid etc.) no longer exists on the page.
-  // Guard so any leftover caller (mini-cal nav, event save/delete...)
-  // no-ops instead of throwing.
   if (!g('cal-grid')) return;
   renderMiniCal();
   renderCalCals();
@@ -7481,7 +7612,7 @@ function exportICS(){
   out += 'END:VCALENDAR\r\n';
   const blob = new Blob([out], {type:'text/calendar'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = 'scholr-calendar-'+new Date().toISOString().slice(0,10)+'.ics';
+  a.download = 'scholr-calendar-'+ymdLocal()+'.ics';
   a.click(); logDataEvent('Exported calendar', events.length+' events as .ics'); toast('Calendar exported — import this .ics into Google Calendar, Outlook, or Apple Calendar');
 }
 function importICS(){
@@ -7554,7 +7685,7 @@ function importICS(){
               else if (customPeriod==='week') endD.setDate(endD.getDate() + n*customFreq*7);
               else if (customPeriod==='month') endD.setMonth(endD.getMonth() + n*customFreq);
               else endD.setFullYear(endD.getFullYear() + n*customFreq);
-              repeatEnd = endD.toISOString().slice(0,10);
+              repeatEnd = ymdLocal(endD);
             }
           }
 
@@ -7670,7 +7801,7 @@ function renderMonthView() {
     const isOther = dt.getMonth() !== m;
     const isSel = dt.toDateString() === calState.selectedDate.toDateString();
     const evs = evMap[dt.toDateString()] || [];
-    const dateStr = dt.toISOString().split('T')[0];
+    const dateStr = ymdLocal(dt);
 
     html += `<div class="cal-cell${isToday?' today':''}${isOther?' other-month':''}${isSel&&!isToday?' selected':''}" onclick="calCellClick('${dateStr}')">
       <div class="cal-dn">${dt.getDate()}</div>`;
@@ -7717,7 +7848,7 @@ function renderWeekView() {
   for (let i = 0; i < 7; i++) {
     const dt = new Date(ws); dt.setDate(ws.getDate() + i);
     const isToday = dt.toDateString() === now.toDateString();
-    hdHtml += `<div class="cal-week-dh${isToday?' today':''}" onclick="calState.dayDate=new Date('${dt.toISOString().split('T')[0]}');calView('day')">
+    hdHtml += `<div class="cal-week-dh${isToday?' today':''}" onclick="calState.dayDate=new Date('${ymdLocal(dt)}T00:00:00');calView('day')">
       <div class="wdn">${DAYS_SHORT[dt.getDay()]}</div>
       <div class="wdd">${dt.getDate()}</div>
     </div>`;
@@ -7734,7 +7865,7 @@ function renderWeekView() {
     const dt = new Date(ws); dt.setDate(ws.getDate() + d);
     const dayEvs = evMap[dt.toDateString()] || [];
     const isToday = dt.toDateString() === now.toDateString();
-    const dateStr = dt.toISOString().split('T')[0];
+    const dateStr = ymdLocal(dt);
 
     let hours = '';
     for (let h = 0; h < 24; h++) {
@@ -7792,7 +7923,7 @@ function renderDayView() {
   const now = new Date();
   const isToday = dt.toDateString() === now.toDateString();
   const visCals = getVisibleCals();
-  const dateStr = dt.toISOString().split('T')[0];
+  const dateStr = ymdLocal(dt);
 
   setText('cal-hd-label', dt.toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric',year:'numeric'}));
 
@@ -7910,7 +8041,7 @@ function calQuickNew(dateStr, timeStr) {
 /* ── OPEN EVENT MODAL ── */
 function calNewEvent() {
   const now = new Date();
-  calOpenModal(null, now.toISOString().split('T')[0], `${String(now.getHours()).padStart(2,'0')}:00`);
+  calOpenModal(null, ymdLocal(now), `${String(now.getHours()).padStart(2,'0')}:00`);
 }
 
 function calOpenModal(evId, dateStr, timeStr) {
@@ -8416,7 +8547,7 @@ function pomFocusOn(course) {
 // DB.pomodoro.todayCount is shown as "Today: N sessions", so it needs to
 // actually reset each day — otherwise it silently becomes a lifetime total.
 function pomCheckDayRollover() {
-  const today = new Date().toISOString().slice(0,10);
+  const today = ymdLocal();
   if (DB.pomodoro.lastDate !== today) {
     DB.pomodoro.todayCount = 0;
     DB.pomodoro.lastDate = today;
@@ -8766,7 +8897,7 @@ if (!DB.cas) DB.cas = [];
 function casNew(){
   ['cas-id','cas-title','cas-hours','cas-refl'].forEach(f=>{ if(g(f)) g(f).value=''; });
   if (g('cas-strand')) g('cas-strand').value='C';
-  if (g('cas-date')) g('cas-date').value=new Date().toISOString().slice(0,10);
+  if (g('cas-date')) g('cas-date').value=ymdLocal();
   showMo('mo-cas');
 }
 function casSave(){
@@ -8774,7 +8905,7 @@ function casSave(){
   const title = g('cas-title').value.trim();
   if (!title) { toast('Add a title'); return; }
   const id = g('cas-id').value || 'cas'+Date.now();
-  const entry = { id, title, strand:g('cas-strand').value, date:g('cas-date').value||new Date().toISOString().slice(0,10),
+  const entry = { id, title, strand:g('cas-strand').value, date:g('cas-date').value||ymdLocal(),
     hours: parseFloat(g('cas-hours').value)||0, refl:g('cas-refl').value.trim() };
   const idx = DB.cas.findIndex(e=>e.id===id);
   if (idx>=0) DB.cas[idx]=entry; else DB.cas.unshift(entry);
